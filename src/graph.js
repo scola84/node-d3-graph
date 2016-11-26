@@ -7,6 +7,9 @@ import 'd3-selection-multi';
 
 export default class Graph {
   constructor() {
+    this._innerHeight = 0;
+    this._innerWidth = 0;
+
     this._margin = {
       bottom: 16,
       left: 16,
@@ -16,6 +19,12 @@ export default class Graph {
 
     this._offset = -1;
     this._ratio = 1;
+
+    this._bottom = null;
+    this._left = null;
+    this._right = null;
+    this._top = null;
+
     this._collection = [];
 
     this._root = select('body')
@@ -35,9 +44,6 @@ export default class Graph {
 
     this._group = this._svg
       .append('g');
-
-    this._left = null;
-    this._bottom = null;
   }
 
   root() {
@@ -50,6 +56,14 @@ export default class Graph {
 
   group() {
     return this._group;
+  }
+
+  innerHeight() {
+    return this._innerHeight;
+  }
+
+  innerWidth() {
+    return this._innerWidth;
   }
 
   width(value = null) {
@@ -132,6 +146,15 @@ export default class Graph {
     return instance;
   }
 
+  bottom() {
+    if (!this._bottom) {
+      this._bottom = new Axis()
+        .graph(this);
+    }
+
+    return this._bottom;
+  }
+
   left() {
     if (!this._left) {
       this._left = new Axis()
@@ -141,13 +164,22 @@ export default class Graph {
     return this._left;
   }
 
-  bottom() {
-    if (!this._bottom) {
-      this._bottom = new Axis()
+  right() {
+    if (!this._right) {
+      this._right = new Axis()
         .graph(this);
     }
 
-    return this._bottom;
+    return this._right;
+  }
+
+  top() {
+    if (!this._top) {
+      this._top = new Axis()
+        .graph(this);
+    }
+
+    return this._top;
   }
 
   line() {
@@ -174,49 +206,53 @@ export default class Graph {
 
     this.height(height);
 
-    const innerWidth = width -
-      this._margin.left -
-      this._margin.right -
-      this._left.data(data).width();
-
-    const innerHeight = height -
-      this._margin.top -
-      this._margin.bottom -
+    const marginBottom =
+      this._margin.bottom +
       this._bottom.data(data).height();
 
-    this._bottom.scale().range([0, innerWidth]);
-    this._left.scale().range([innerHeight, 0]);
+    const marginLeft =
+      this._margin.left +
+      this._left.data(data).width();
 
-    const x = width - this._margin.right - innerWidth;
-    const y = this._margin.top;
+    const marginRight =
+      this._margin.right +
+      this._right.data(data).width();
 
-    this._group
-      .attr('transform', `translate(${x},${y})`);
+    const marginTop =
+      this._margin.top +
+      this._top.data(data).height();
+
+    this._innerHeight = height -
+      marginTop -
+      marginBottom;
+
+    this._innerWidth = width -
+      marginLeft -
+      marginRight;
 
     this._bottom
-      .root()
-      .attr('transform', `translate(0,${innerHeight})`)
-      .call(this._bottom.axis());
+      .scale()
+      .range([0, this._innerWidth]);
 
     this._left
-      .axis()
-      .tickSizeInner(-innerWidth);
+      .scale()
+      .range([this._innerHeight, 0]);
 
-    this._left
-      .root()
-      .call(this._left.axis());
+    this._right
+      .scale()
+      .range([this._innerHeight, 0]);
 
-    this._left
-      .root()
-      .select('path')
-      .remove();
+    this._top
+      .scale()
+      .range([0, this._innerWidth]);
 
-    this._left
-      .root()
-      .selectAll('line')
-      .style('opacity', 0.2);
+    this._bottom.bottom();
+    this._left.left();
+    this._right.right();
+    this._top.top();
 
     this._group
+      .attr('transform', `translate(${marginLeft},${marginTop})`)
       .selectAll('text')
       .style('font-size', '0.9em');
 
@@ -225,232 +261,3 @@ export default class Graph {
     });
   }
 }
-
-// import series from 'async/series';
-// import { controlBar } from '@scola/d3-generic';
-// import tip from 'd3-tip';
-// import Axis from './axis';
-// import Line from './line';
-//
-// export default class Graph {
-//   constructor() {
-//     this._x = null;
-//     this._y = null;
-//
-//     this._collection = [];
-//
-//     this._offset = 0;
-//     this._ratio = 0.5;
-//
-//     this._margin = {
-//       bottom: 10,
-//       left: 10,
-//       right: 10,
-//       top: 10
-//     };
-//
-//     this._root = select('body')
-//       .append('div')
-//       .remove()
-//       .classed('scola-graph', true)
-//       .styles({
-//         'display': 'flex'
-//       });
-//
-//     this._svg = this._root
-//       .append('svg')
-//       .styles({
-//         'background': '#FFF',
-//         'border-bottom': '1px solid #CCC',
-//         'border-top': '1px solid #CCC',
-//         'height': '100%',
-//         'width': '100%'
-//       });
-//
-//     this._group = this._svg
-//       .append('g');
-//
-//     this._tip = tip()
-//       .attr('class', 'scola-tip')
-//       .style('background', '#EEE')
-//       .style('padding', '0.5em')
-//       .style('border-radius', '0.5em')
-//       .offset([-10, 0]);
-//
-//     this._svg.call(this._tip);
-//   }
-//
-//   group() {
-//     return this._group;
-//   }
-//
-//   svg() {
-//     return this._svg;
-//   }
-//
-//   destroy() {
-//
-//   }
-//
-//   root() {
-//     return this._root;
-//   }
-//
-//   x() {
-//     if (!this._x) {
-//       this._x = new Axis()
-//         .graph(this);
-//     }
-//
-//     return this._x;
-//   }
-//
-//   y() {
-//     if (!this._y) {
-//       this._y = new Axis()
-//         .graph(this);
-//     }
-//
-//     return this._y;
-//   }
-//
-//   tip(value = null) {
-//     if (value === null) {
-//       return this._tip;
-//     }
-//
-//     this._tip.html(value);
-//     return this;
-//   }
-//
-//   line() {
-//     const line = new Line()
-//       .graph(this);
-//
-//     this._collection.push(line);
-//     return line;
-//   }
-//
-//   offset(value = null) {
-//     if (value === null) {
-//       return this._offset;
-//     }
-//
-//     this._offset = value;
-//     return this;
-//   }
-//
-//   ratio(value = null) {
-//     if (value === null) {
-//       return this._ratio;
-//     }
-//
-//     this._ratio = value;
-//     return this;
-//   }
-//
-//   margin(value = null) {
-//     if (value === null) {
-//       return this._margin;
-//     }
-//
-//     if (typeof value === 'number') {
-//       return this.margin({
-//         bottom: value,
-//         left: value,
-//         right: value,
-//         top: value
-//       });
-//     }
-//
-//     Object.assign(this._margin, value);
-//     return this;
-//   }
-//
-//   inset() {
-//     this._root.styles({
-//       'padding-left': '1em',
-//       'padding-right': '1em'
-//     });
-//
-//     this._svg.styles({
-//       'border-style': 'none',
-//       'border-radius': '0.5em'
-//     });
-//
-//     return this;
-//   }
-//
-//   width() {
-//     return parseInt(this._root.style('width'), 10) -
-//       parseInt(this._root.style('padding-left'), 10) -
-//       parseInt(this._root.style('padding-right'), 10);
-//   }
-//
-//   height() {
-//     return parseInt(this._root.style('height'), 10) -
-//       parseInt(this._root.style('padding-top'), 10) -
-//       parseInt(this._root.style('padding-bottom'), 10);
-//   }
-//
-//   innerWidth() {
-//     return this.width() -
-//       this._margin.left -
-//       this._margin.right -
-//       this._y.width();
-//   }
-//
-//   innerHeight() {
-//     return this.height() -
-//       this._margin.top -
-//       this._margin.bottom -
-//       this._x.height();
-//   }
-//
-//   render(callback) {
-//     this._root.style('height', this.width() * this._ratio + 'px');
-//
-//     const fn = this._collection.map((item) => (c) => item.render(c));
-//
-//     series(fn, (error, result) => {
-//       if (error) {
-//         callback(error);
-//         return;
-//       }
-//
-//       const data = result.reduce((initial, item) => initial.concat(item), []);
-//       this._render(data, callback);
-//     });
-//   }
-//
-//   _render(data, callback) {
-//     this._y
-//       .scale()
-//       .rangeRound([this.innerHeight(), 0]);
-//
-//     this._y
-//       .axis()
-//       .tickSizeInner(-this.innerWidth());
-//
-//     this._y.render(data);
-//
-//     this._x
-//       .scale()
-//       .rangeRound([0, this.innerWidth()]);
-//
-//     this._x.render(data);
-//
-//     this._x
-//       .root()
-//       .attr('transform', 'translate(0,' + this.innerHeight() + ')');
-//
-//     const left = this._margin.left + this._y.width();
-//     const top = this._margin.top;
-//
-//     this._group.attrs({
-//       'transform': `translate(${left}, ${top})`
-//     });
-//
-//     callback();
-//   }
-// }

@@ -1,21 +1,37 @@
 export default class Axis {
   constructor() {
     this._root = null;
+
     this._graph = null;
     this._axis = null;
     this._scale = null;
     this._domain = null;
     this._value = null;
+
+    this._grid = false;
+    this._line = true;
   }
 
   root() {
-    if (!this._root) {
-      this._root = this._graph
-        .group()
-        .append('g');
+    return this._root;
+  }
+
+  axis(value = null) {
+    if (value === null) {
+      return this._axis;
     }
 
-    return this._root;
+    this._axis = value;
+    return this;
+  }
+
+  domain(value = null) {
+    if (value === null) {
+      return this._domain;
+    }
+
+    this._domain = value;
+    return this;
   }
 
   graph(value = null) {
@@ -27,12 +43,21 @@ export default class Axis {
     return this;
   }
 
-  axis(value = null) {
+  grid(value = null) {
     if (value === null) {
-      return this._axis;
+      return this._grid;
     }
 
-    this._axis = value;
+    this._grid = value;
+    return this;
+  }
+
+  line(value) {
+    if (value === null) {
+      return this._line;
+    }
+
+    this._line = value;
     return this;
   }
 
@@ -47,15 +72,6 @@ export default class Axis {
     return this;
   }
 
-  domain(value = null) {
-    if (value === null) {
-      return this._domain;
-    }
-
-    this._domain = value;
-    return this;
-  }
-
   value(v = null) {
     if (v === null) {
       return this._value;
@@ -63,6 +79,10 @@ export default class Axis {
 
     this._value = v;
     return this;
+  }
+
+  get(datum) {
+    return this._value(datum, this._scale);
   }
 
   data(value) {
@@ -80,15 +100,64 @@ export default class Axis {
       this._size('width');
   }
 
-  get(datum) {
-    return this._value(datum, this._scale);
+  bottom() {
+    this._render(-this._graph.innerHeight());
+
+    this._root
+      .attr('transform', `translate(0,${this._graph.innerHeight()})`);
+
+    return this;
+  }
+
+  left() {
+    return this._render(-this._graph.innerWidth());
+  }
+
+  right() {
+    this._render(-this._graph.innerWidth());
+
+    this._root
+      .attr('transform', `translate(${this._graph.innerWidth()},0)`);
+
+    return this;
+  }
+
+  top() {
+    return this._render(-this._graph.innerHeight());
+  }
+
+  _render(gridSize) {
+    if (this._grid === true) {
+      this._setGridSize(gridSize);
+    }
+
+    this._root = this._graph
+      .group()
+      .append('g')
+      .call(this._axis);
+
+    if (this._grid === true) {
+      this._setGridColor();
+    }
+
+    if (this._line === false) {
+      this._hideLine();
+    }
+
+    return this;
   }
 
   _size(attr) {
+    const format = this._axis.tickFormat() ||
+      this._scale.tickFormat();
+
     const longest = this._scale
       .ticks(5)
-      .reduce((m, c) => {
-        return String(c).length > m.length ? String(c) : m;
+      .map(format)
+      .reduce((max, tick) => {
+        return String(tick).length > max.length ?
+          String(tick) :
+          max;
       }, '');
 
     const node = this._graph
@@ -101,5 +170,21 @@ export default class Axis {
     node.remove();
 
     return size;
+  }
+
+  _setGridSize(size) {
+    this._axis.tickSizeInner(size);
+  }
+
+  _setGridColor() {
+    this._root
+      .selectAll('line')
+      .style('opacity', 0.2);
+  }
+
+  _hideLine() {
+    this._root
+      .select('path')
+      .style('display', 'none');
   }
 }

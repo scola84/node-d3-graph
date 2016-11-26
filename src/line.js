@@ -3,6 +3,9 @@ import { line } from 'd3-shape';
 export default class Line {
   constructor() {
     this._graph = null;
+    this._x = null;
+    this._y = null;
+
     this._factory = line()
       .x((datum) => this._x.get(datum))
       .y((datum) => this._y.get(datum));
