@@ -19,7 +19,9 @@ export default class Graph {
 
     this._offset = -1;
     this._ratio = 1;
+    this._duration = 250;
 
+    this._message = null;
     this._bottom = null;
     this._left = null;
     this._right = null;
@@ -115,6 +117,15 @@ export default class Graph {
     return this;
   }
 
+  duration(value = null) {
+    if (value === null) {
+      return this._duration;
+    }
+
+    this._duration = value;
+    return this;
+  }
+
   inset() {
     this._root.styles({
       'padding-left': '1em',
@@ -126,6 +137,15 @@ export default class Graph {
       'border-radius': '0.5em'
     });
 
+    return this;
+  }
+
+  message(text) {
+    if (!this._message) {
+      this._insertMessage();
+    }
+
+    this._message.text(text);
     return this;
   }
 
@@ -183,44 +203,58 @@ export default class Graph {
   }
 
   line() {
-    const l = new Line()
+    const line = new Line()
       .graph(this);
 
-    this._collection.push(l);
+    this._collection.push(line);
 
-    return l;
+    return line;
   }
 
   scatter() {
-    const s = new Scatter()
+    const scatter = new Scatter()
       .graph(this);
 
-    this._collection.push(s);
+    this._collection.push(scatter);
 
-    return s;
+    return scatter;
   }
 
-  render(data) {
+  render(data, key) {
+    if (this._message) {
+      this._deleteMessage();
+    }
+
     const width = this.width();
+
+    if (Number.isNaN(width)) {
+      return this;
+    }
+
     const height = width * this._ratio;
 
     this.height(height);
 
-    const marginBottom =
-      this._margin.bottom +
-      this._bottom.data(data).height();
+    let marginBottom = this._margin.bottom;
+    let marginLeft = this._margin.left;
+    let marginRight = this._margin.right;
+    let marginTop = this._margin.top;
 
-    const marginLeft =
-      this._margin.left +
-      this._left.data(data).width();
+    if (this._bottom) {
+      marginBottom += this._bottom.data(data).height();
+    }
 
-    const marginRight =
-      this._margin.right +
-      this._right.data(data).width();
+    if (this._left) {
+      marginLeft += this._left.data(data).width();
+    }
 
-    const marginTop =
-      this._margin.top +
-      this._top.data(data).height();
+    if (this._right) {
+      marginRight = this._right.data(data).width();
+    }
+
+    if (this._top) {
+      marginTop += this._top.data(data).height();
+    }
 
     this._innerHeight = height -
       marginTop -
@@ -230,26 +264,37 @@ export default class Graph {
       marginLeft -
       marginRight;
 
-    this._bottom
-      .scale()
-      .range([0, this._innerWidth]);
+    if (this._bottom) {
+      this._bottom
+        .scale()
+        .range([0, this._innerWidth]);
 
-    this._left
-      .scale()
-      .range([this._innerHeight, 0]);
+      this._bottom.bottom();
+    }
 
-    this._right
-      .scale()
-      .range([this._innerHeight, 0]);
+    if (this._left) {
+      this._left
+        .scale()
+        .range([this._innerHeight, 0]);
 
-    this._top
-      .scale()
-      .range([0, this._innerWidth]);
+      this._left.left();
+    }
 
-    this._bottom.bottom();
-    this._left.left();
-    this._right.right();
-    this._top.top();
+    if (this._right) {
+      this._right
+        .scale()
+        .range([this._innerHeight, 0]);
+
+      this._right.right();
+    }
+
+    if (this._top) {
+      this._top
+        .scale()
+        .range([0, this._innerWidth]);
+
+      this._top.top();
+    }
 
     this._group
       .attr('transform', `translate(${marginLeft},${marginTop})`)
@@ -257,7 +302,39 @@ export default class Graph {
       .style('font-size', '0.9em');
 
     this._collection.forEach((item) => {
-      item.render(data);
+      item.render(data, key);
     });
+
+    return this;
+  }
+
+  _insertMessage() {
+    const x = this.width() / 2;
+    const y = this.height() / 2;
+
+    this._message = this._svg
+      .append('text')
+      .classed('scola message', true)
+      .attrs({
+        'alignment-baseline': 'central',
+        'text-anchor': 'middle',
+        'transform': `translate(${x}, ${y})`
+      })
+      .style('opacity', 0);
+
+    this._message
+      .transition()
+      .duration(this._duration)
+      .style('opacity', 1);
+  }
+
+  _deleteMessage() {
+    this._message
+      .transition()
+      .duration(this._duration)
+      .style('opacity', 0)
+      .remove();
+
+    this._message = null;
   }
 }

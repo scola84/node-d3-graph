@@ -1,15 +1,27 @@
 export default class Axis {
   constructor() {
     this._root = null;
-
     this._graph = null;
     this._axis = null;
     this._scale = null;
     this._domain = null;
     this._value = null;
-
     this._grid = false;
-    this._line = true;
+
+    this._enter = () => {};
+    this._exit = () => {};
+    this._duration = 250;
+  }
+
+  destroy() {
+    const exit = this._root
+      .transition()
+      .duration(this._duration);
+
+    this._exit(exit);
+    exit.remove();
+
+    this._root = null;
   }
 
   root() {
@@ -43,24 +55,6 @@ export default class Axis {
     return this;
   }
 
-  grid(value = null) {
-    if (value === null) {
-      return this._grid;
-    }
-
-    this._grid = value;
-    return this;
-  }
-
-  line(value) {
-    if (value === null) {
-      return this._line;
-    }
-
-    this._line = value;
-    return this;
-  }
-
   scale(value = null) {
     if (value === null) {
       return this._scale;
@@ -78,6 +72,42 @@ export default class Axis {
     }
 
     this._value = v;
+    return this;
+  }
+
+  grid(value = null) {
+    if (value === null) {
+      return this._grid;
+    }
+
+    this._grid = value;
+    return this;
+  }
+
+  enter(value = null) {
+    if (value === null) {
+      return this._enter;
+    }
+
+    this._enter = value;
+    return this;
+  }
+
+  exit(value = null) {
+    if (value === null) {
+      return this._exit;
+    }
+
+    this._exit = value;
+    return this;
+  }
+
+  duration(value = null) {
+    if (value === null) {
+      return this._duration;
+    }
+
+    this._duration = value;
     return this;
   }
 
@@ -128,22 +158,21 @@ export default class Axis {
 
   _render(gridSize) {
     if (this._grid === true) {
-      this._setGridSize(gridSize);
+      this._axis.tickSizeInner(gridSize);
     }
 
-    this._root = this._graph
-      .group()
-      .append('g')
+    if (!this._root) {
+      this._root = this._graph
+        .group()
+        .append('g');
+    }
+
+    this._root
+      .transition()
+      .duration(this._duration)
       .call(this._axis);
 
-    if (this._grid === true) {
-      this._setGridColor();
-    }
-
-    if (this._line === false) {
-      this._hideLine();
-    }
-
+    this._enter(this._root);
     return this;
   }
 
@@ -170,21 +199,5 @@ export default class Axis {
     node.remove();
 
     return size;
-  }
-
-  _setGridSize(size) {
-    this._axis.tickSizeInner(size);
-  }
-
-  _setGridColor() {
-    this._root
-      .selectAll('line')
-      .style('opacity', 0.2);
-  }
-
-  _hideLine() {
-    this._root
-      .select('path')
-      .style('display', 'none');
   }
 }
