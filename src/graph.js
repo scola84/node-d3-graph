@@ -1,8 +1,6 @@
 import { select } from 'd3-selection';
 import tip from 'd3-tip';
-import Axis from './axis';
-import Line from './line';
-import Scatter from './scatter';
+import { controlBar } from '@scola/d3-generic';
 import 'd3-selection-multi';
 
 export default class Graph {
@@ -27,25 +25,71 @@ export default class Graph {
     this._right = null;
     this._top = null;
 
-    this._collection = [];
+    this._collection = new Set();
 
     this._root = select('body')
       .append('div')
       .remove()
-      .classed('scola graph', true);
+      .classed('scola graph', true)
+      .styles({
+        'padding-bottom': '3em'
+      });
 
-    this._svg = this._root
-      .append('svg')
+    this._body = this._root
+      .append('div')
+      .classed('scola body', true)
       .styles({
         'background': '#FFF',
         'border-bottom': '1px solid #CCC',
         'border-top': '1px solid #CCC',
+        'display': 'flex',
+        'flex-direction': 'column',
+        'overflow': 'hidden'
+      });
+
+    this._svg = this._body
+      .append('svg')
+      .styles({
         'height': '100%',
+        'order': 2,
         'width': '100%'
       });
 
     this._group = this._svg
       .append('g');
+  }
+
+  destroy() {
+    if (this._message) {
+      this._deleteMessage();
+    }
+
+    if (this._bottom) {
+      this._bottom.destroy();
+      this._bottom = null;
+    }
+
+    if (this._left) {
+      this._left.destroy();
+      this._left = null;
+    }
+
+    if (this._right) {
+      this._right.destroy();
+      this._right = null;
+    }
+
+    if (this._top) {
+      this._top.destroy();
+      this._top = null;
+    }
+
+    this._collection.forEach((item) => {
+      item.destroy();
+    });
+
+    this._root.remove();
+    this._root = null;
   }
 
   root() {
@@ -60,6 +104,60 @@ export default class Graph {
     return this._group;
   }
 
+  footer(action) {
+    if (typeof action === 'undefined') {
+      return this._footer;
+    }
+
+    if (action === false) {
+      this._footer.destroy();
+      this._footer = null;
+
+      return this;
+    }
+
+    this._footer = controlBar();
+
+    this._footer.root()
+      .classed('scola footer', true)
+      .styles({
+        'border-top': '1px solid #CCC',
+        'order': 3
+      });
+
+    this._body.node()
+      .appendChild(this._footer.root().node());
+
+    return this;
+  }
+
+  header(action) {
+    if (typeof action === 'undefined') {
+      return this._header;
+    }
+
+    if (action === false) {
+      this._header.destroy();
+      this._header = null;
+
+      return this;
+    }
+
+    this._header = controlBar();
+
+    this._header.root()
+      .classed('scola header', true)
+      .styles({
+        'border-bottom': '1px solid #CCC',
+        'order': 1
+      });
+
+    this._body.node()
+      .appendChild(this._header.root().node());
+
+    return this;
+  }
+
   innerHeight() {
     return this._innerHeight;
   }
@@ -70,23 +168,19 @@ export default class Graph {
 
   width(value = null) {
     if (value === null) {
-      return parseInt(this._root.style('width'), 10) -
-        parseInt(this._root.style('padding-left'), 10) -
-        parseInt(this._root.style('padding-right'), 10);
+      return parseInt(this._svg.style('width'), 10);
     }
 
-    this._root.style('width', value + 'px');
+    this._svg.style('width', value + 'px');
     return this;
   }
 
   height(value = null) {
     if (value === null) {
-      return parseInt(this._root.style('height'), 10) -
-        parseInt(this._root.style('padding-top'), 10) -
-        parseInt(this._root.style('padding-bottom'), 10);
+      return parseInt(this._svg.style('height'), 10);
     }
 
-    this._root.style('height', value + 'px');
+    this._svg.style('height', value + 'px');
     return this;
   }
 
@@ -126,17 +220,49 @@ export default class Graph {
     return this;
   }
 
-  inset() {
-    this._root.styles({
-      'padding-left': '1em',
-      'padding-right': '1em'
-    });
+  append(item, action) {
+    if (action === true) {
+      this._collection.add(item.graph(this));
+    } else if (action === false) {
+      this._collection.delete(item);
+    }
 
-    this._svg.styles({
-      'border-style': 'none',
-      'border-radius': '0.5em'
-    });
+    return this;
+  }
 
+  bottom(value = null) {
+    if (value === null) {
+      return this._bottom;
+    }
+
+    this._bottom = value.graph(this);
+    return this;
+  }
+
+  left(value = null) {
+    if (value === null) {
+      return this._left;
+    }
+
+    this._left = value.graph(this);
+    return this;
+  }
+
+  right(value = null) {
+    if (value === null) {
+      return this._right;
+    }
+
+    this._right = value.graph(this);
+    return this;
+  }
+
+  top(value = null) {
+    if (value === null) {
+      return this._top;
+    }
+
+    this._top = value.graph(this);
     return this;
   }
 
@@ -145,7 +271,24 @@ export default class Graph {
       this._insertMessage();
     }
 
-    this._message.text(text);
+    if (this._message) {
+      this._message.text(text);
+    }
+
+    return this;
+  }
+
+  inset() {
+    this._root.styles({
+      'padding-left': '1em',
+      'padding-right': '1em'
+    });
+
+    this._body.styles({
+      'border-style': 'none',
+      'border-radius': '0.5em'
+    });
+
     return this;
   }
 
@@ -164,60 +307,6 @@ export default class Graph {
     this._group.call(instance);
 
     return instance;
-  }
-
-  bottom() {
-    if (!this._bottom) {
-      this._bottom = new Axis()
-        .graph(this);
-    }
-
-    return this._bottom;
-  }
-
-  left() {
-    if (!this._left) {
-      this._left = new Axis()
-        .graph(this);
-    }
-
-    return this._left;
-  }
-
-  right() {
-    if (!this._right) {
-      this._right = new Axis()
-        .graph(this);
-    }
-
-    return this._right;
-  }
-
-  top() {
-    if (!this._top) {
-      this._top = new Axis()
-        .graph(this);
-    }
-
-    return this._top;
-  }
-
-  line() {
-    const line = new Line()
-      .graph(this);
-
-    this._collection.push(line);
-
-    return line;
-  }
-
-  scatter() {
-    const scatter = new Scatter()
-      .graph(this);
-
-    this._collection.push(scatter);
-
-    return scatter;
   }
 
   render(data, key) {
@@ -241,19 +330,27 @@ export default class Graph {
     let marginTop = this._margin.top;
 
     if (this._bottom) {
-      marginBottom += this._bottom.data(data).height();
+      marginBottom += this._bottom
+        .data(data)
+        .height();
     }
 
     if (this._left) {
-      marginLeft += this._left.data(data).width();
+      marginLeft += this._left
+        .data(data)
+        .width();
     }
 
     if (this._right) {
-      marginRight = this._right.data(data).width();
+      marginRight = this._right
+        .data(data)
+        .width();
     }
 
     if (this._top) {
-      marginTop += this._top.data(data).height();
+      marginTop += this._top
+        .data(data)
+        .height();
     }
 
     this._innerHeight = height -
@@ -296,10 +393,9 @@ export default class Graph {
       this._top.top();
     }
 
-    this._group
-      .attr('transform', `translate(${marginLeft},${marginTop})`)
-      .selectAll('text')
-      .style('font-size', '0.9em');
+    if (data.length > 0) {
+      this._setPosition(marginLeft, marginTop);
+    }
 
     this._collection.forEach((item) => {
       item.render(data, key);
@@ -308,9 +404,20 @@ export default class Graph {
     return this;
   }
 
+  _setPosition(left, top) {
+    this._group
+      .attr('transform', `translate(${left},${top})`)
+      .selectAll('text')
+      .style('font-size', '0.9em');
+  }
+
   _insertMessage() {
     const x = this.width() / 2;
     const y = this.height() / 2;
+
+    if (Number.isNaN(x)) {
+      return;
+    }
 
     this._message = this._svg
       .append('text')

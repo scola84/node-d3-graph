@@ -1,4 +1,4 @@
-export default class Scatter {
+export default class Bar {
   constructor() {
     this._graph = null;
     this._x = null;
@@ -7,8 +7,8 @@ export default class Scatter {
     this._formatTip = null;
     this._tip = null;
 
-    this._enter = (s) => s.attr('r', 3);
-    this._exit = (s) => s.attr('r', 0);
+    this._enter = (s) => s.style('opacity', 1);
+    this._exit = (s) => s.style('opacity', 0);
   }
 
   destroy() {
@@ -20,11 +20,11 @@ export default class Scatter {
       this._tip.hide();
     }
 
-    const scatter = this._graph
+    const bar = this._graph
       .group()
-      .selectAll('.scola-scatter');
+      .selectAll('.scola-bar');
 
-    const exit = this._exit(scatter
+    const exit = this._exit(bar
       .transition());
 
     exit.remove();
@@ -86,25 +86,23 @@ export default class Scatter {
   }
 
   render(data, key) {
-    const scatter = this._graph
+    const height = this._graph.innerHeight();
+    const bar = this._graph
       .group()
-      .selectAll('.scola-scatter')
+      .selectAll('.scola-bar')
       .data(data, key);
 
-    const exit = this._exit(scatter
+    const exit = this._exit(bar
       .exit()
       .transition());
 
     exit.remove();
 
-    const enter = scatter
+    const enter = bar
       .enter()
-      .append('circle')
-      .merge(scatter)
-      .classed('scola-scatter', true)
-      .styles({
-        'fill': 'rgba(0, 0, 0, 0)'
-      });
+      .append('rect')
+      .merge(bar)
+      .classed('scola-bar', true);
 
     if (this._formatTip) {
       if (!this._tip) {
@@ -125,8 +123,12 @@ export default class Scatter {
     const position = minimize
       .transition()
       .duration(0)
-      .attr('cx', (datum) => this._x.get(datum))
-      .attr('cy', (datum) => this._y.get(datum));
+      .attr('x', (datum) => this._x.get(datum))
+      .attr('y', (datum) => this._y.get(datum))
+      .attr('width', this._x.scale().bandwidth())
+      .attr('height', (datum) => {
+        return height - this._y.get(datum);
+      });
 
     this._enter(position.transition());
   }

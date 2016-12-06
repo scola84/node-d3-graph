@@ -2,10 +2,10 @@ import { line } from 'd3-shape';
 
 export default class Line {
   constructor() {
-    this._root = null;
     this._graph = null;
     this._x = null;
     this._y = null;
+    this._root = null;
 
     this._factory = line()
       .x((datum) => this._x.get(datum))
@@ -13,18 +13,22 @@ export default class Line {
 
     this._enter = (s) => s.style('opacity', 1);
     this._exit = (s) => s.style('opacity', 0);
-    this._duration = 250;
   }
 
   destroy() {
-    const exit = this._root
-      .transition()
-      .duration(this._duration);
+    if (!this._root) {
+      return this;
+    }
 
-    this._exit(exit);
-    exit.remove();
-    
+    const exit = this._exit(this._root.transition());
     this._root = null;
+    exit.remove();
+
+    return this;
+  }
+
+  root() {
+    return this._root;
   }
 
   factory() {
@@ -76,38 +80,25 @@ export default class Line {
     return this;
   }
 
-  duration(value = null) {
-    if (value === null) {
-      return this._duration;
-    }
-
-    this._duration = value;
-    return this;
-  }
-
   render(data) {
     if (!this._root) {
       this._root = this._graph
         .group()
         .append('path')
-        .classed('scola-line', true);
+        .classed('scola-line', true)
+        .styles({
+          'fill': 'none'
+        });
     }
 
-    const exit = this._root
-      .styles({
-        'fill': 'none'
-      })
-      .transition()
-      .duration(this._duration);
+    const exit = this._exit(this._root.transition());
 
     const enter = exit
       .transition()
       .duration(0)
       .attr('d', this._factory(data))
-      .transition()
-      .duration(this._duration);
+      .transition();
 
-    this._exit(exit);
     this._enter(enter);
   }
 }

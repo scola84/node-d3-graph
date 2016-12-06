@@ -7,21 +7,20 @@ export default class Axis {
     this._domain = null;
     this._value = null;
     this._grid = false;
+    this._data = [];
 
-    this._enter = () => {};
-    this._exit = () => {};
-    this._duration = 250;
+    this._enter = (s) => s.style('opacity', 1);
+    this._exit = (s) => s;
   }
 
   destroy() {
-    const exit = this._root
-      .transition()
-      .duration(this._duration);
+    if (!this._root) {
+      return;
+    }
 
-    this._exit(exit);
-    exit.remove();
-
+    const exit = this._exit(this._root.transition());
     this._root = null;
+    exit.remove();
   }
 
   root() {
@@ -102,22 +101,15 @@ export default class Axis {
     return this;
   }
 
-  duration(value = null) {
-    if (value === null) {
-      return this._duration;
-    }
+  data(value) {
+    this._data = value;
+    this._scale.domain(this._domain(value));
 
-    this._duration = value;
     return this;
   }
 
   get(datum) {
     return this._value(datum, this._scale);
-  }
-
-  data(value) {
-    this._scale.domain(this._domain(value));
-    return this;
   }
 
   height() {
@@ -132,28 +124,28 @@ export default class Axis {
 
   bottom() {
     this._render(-this._graph.innerHeight());
-
-    this._root
-      .attr('transform', `translate(0,${this._graph.innerHeight()})`);
+    this._root.attr('transform',
+      `translate(0,${this._graph.innerHeight()})`);
 
     return this;
   }
 
   left() {
-    return this._render(-this._graph.innerWidth());
+    this._render(-this._graph.innerWidth());
+    return this;
   }
 
   right() {
     this._render(-this._graph.innerWidth());
-
-    this._root
-      .attr('transform', `translate(${this._graph.innerWidth()},0)`);
+    this._root.attr('transform',
+      `translate(${this._graph.innerWidth()},0)`);
 
     return this;
   }
 
   top() {
-    return this._render(-this._graph.innerHeight());
+    this._render(-this._graph.innerHeight());
+    return this;
   }
 
   _render(gridSize) {
@@ -164,24 +156,21 @@ export default class Axis {
     if (!this._root) {
       this._root = this._graph
         .group()
-        .append('g');
+        .append('g')
+        .style('opacity', 0);
     }
 
-    this._root
-      .transition()
-      .duration(this._duration)
+    this
+      ._enter(this._root, this._data)
       .call(this._axis);
-
-    this._enter(this._root);
-    return this;
   }
 
   _size(attr) {
     const format = this._axis.tickFormat() ||
-      this._scale.tickFormat();
+      this._scale.tickFormat && this._scale.tickFormat();
 
-    const longest = this._scale
-      .ticks(5)
+    const longest = !this._scale.ticks ? '0' : this._scale
+      .ticks(...this._axis.tickArguments())
       .map(format)
       .reduce((max, tick) => {
         return String(tick).length > max.length ?
