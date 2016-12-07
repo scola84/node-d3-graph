@@ -88,6 +88,8 @@ export default class Graph {
       item.destroy();
     });
 
+    this._collection.clear();
+
     this._root.remove();
     this._root = null;
   }
