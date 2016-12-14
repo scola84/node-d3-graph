@@ -1,3 +1,5 @@
+import { event } from 'd3-selection';
+
 export default class Scatter {
   constructor() {
     this._graph = null;

@@ -307,7 +307,6 @@ export default class Graph {
       .html(value);
 
     this._group.call(instance);
-
     return instance;
   }
 
@@ -323,7 +322,6 @@ export default class Graph {
     }
 
     const height = width * this._ratio;
-
     this.height(height);
 
     let marginBottom = this._margin.bottom;
@@ -344,7 +342,7 @@ export default class Graph {
     }
 
     if (this._right) {
-      marginRight = this._right
+      marginRight += this._right
         .data(data)
         .width();
     }

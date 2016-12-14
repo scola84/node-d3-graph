@@ -124,8 +124,11 @@ export default class Axis {
 
   bottom() {
     this._render(-this._graph.innerHeight());
-    this._root.attr('transform',
-      `translate(0,${this._graph.innerHeight()})`);
+
+    if (this._data.length > 0) {
+      this._root.attr('transform',
+        `translate(0,${this._graph.innerHeight()})`);
+    }
 
     return this;
   }
@@ -137,8 +140,11 @@ export default class Axis {
 
   right() {
     this._render(-this._graph.innerWidth());
-    this._root.attr('transform',
-      `translate(${this._graph.innerWidth()},0)`);
+
+    if (this._data.length > 0) {
+      this._root.attr('transform',
+        `translate(${this._graph.innerWidth()},0)`);
+    }
 
     return this;
   }
@@ -160,8 +166,13 @@ export default class Axis {
         .style('opacity', 0);
     }
 
+    if (this._data.length === 0) {
+      this._exit(this._root.transition());
+      return;
+    }
+
     this
-      ._enter(this._root, this._data)
+      ._enter(this._root.transition(), this._data)
       .call(this._axis);
   }
 
