@@ -1,6 +1,6 @@
 {
   "name": "@scola/d3-graph",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Graph",
   "repository": "github:scola84/node-d3-graph",
   "author": "M.C. van den Boogaart <scola@kvdb.name>",
