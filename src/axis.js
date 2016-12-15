@@ -1,3 +1,5 @@
+/* eslint prefer-reflect: "off" */
+
 export default class Axis {
   constructor() {
     this._root = null;

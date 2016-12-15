@@ -11,7 +11,6 @@
     "@scola/d3-generic": "^1.1.0",
     "d3-selection": "^1.0.3",
     "d3-selection-multi": "^1.0.0",
-    "d3-shape": "^1.0.4",
-    "d3-tip": "^0.7.1"
+    "d3-shape": "^1.0.4"
   }
 }

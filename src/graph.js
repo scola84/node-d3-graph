@@ -1,5 +1,4 @@
-import { select } from 'd3-selection';
-import tip from 'd3-tip';
+import { event, select } from 'd3-selection';
 import { controlBar } from '@scola/d3-generic';
 import 'd3-selection-multi';
 
@@ -20,6 +19,8 @@ export default class Graph {
     this._duration = 250;
 
     this._message = null;
+    this._tip = null;
+
     this._bottom = null;
     this._left = null;
     this._right = null;
@@ -31,9 +32,7 @@ export default class Graph {
       .append('div')
       .remove()
       .classed('scola graph', true)
-      .styles({
-        'padding-bottom': '3em'
-      });
+      .style('padding-bottom', '3em');
 
     this._body = this._root
       .append('div')
@@ -47,12 +46,16 @@ export default class Graph {
         'overflow': 'hidden'
       });
 
-    this._svg = this._body
+    this._outer = this._body
+      .append('div')
+      .classed('scola svg', true)
+      .style('order', 2);
+
+    this._svg = this._outer
       .append('svg')
-      .styles({
-        'height': '100%',
-        'order': 2,
-        'width': '100%'
+      .attrs({
+        'width': '100%',
+        'height': '100%'
       });
 
     this._group = this._svg
@@ -62,6 +65,10 @@ export default class Graph {
   destroy() {
     if (this._message) {
       this._deleteMessage();
+    }
+
+    if (this._tip) {
+      this._deleteTip();
     }
 
     if (this._bottom) {
@@ -294,20 +301,20 @@ export default class Graph {
     return this;
   }
 
-  tip(value) {
-    const instance = tip()
-      .attr('class', 'scola tip')
-      .style('background', '#000')
-      .style('color', '#FFF')
-      .style('line-height', '1.65em')
-      .style('padding', '0.25em 0.5em')
-      .style('font-size', '0.9em')
-      .style('border-radius', '0.3em')
-      .offset([-10, 0])
-      .html(value);
+  tip(datum = null, format = null) {
+    if (datum === null) {
+      return this._tip;
+    }
 
-    this._group.call(instance);
-    return instance;
+    if (datum === false) {
+      return this._deleteTip();
+    }
+
+    if (format === null) {
+      return this;
+    }
+
+    return this._insertTip(datum, format);
   }
 
   render(data, key) {
@@ -443,5 +450,49 @@ export default class Graph {
       .remove();
 
     this._message = null;
+  }
+
+  _insertTip(datum, format) {
+    this._tip = select('body')
+      .append('div')
+      .attr('class', 'scola tip')
+      .styles({
+        'background': '#000',
+        'color': '#FFF',
+        'line-height': '1.65em',
+        'padding': '0.25em 0.5em',
+        'position': 'absolute',
+        'white-space': 'nowrap',
+        'border-radius': '0.3em'
+      });
+
+    this._tip = format(this._tip, datum);
+
+    const targetRect = event.target.getBoundingClientRect();
+    const tipRect = this._tip.node().getBoundingClientRect();
+
+    const left = targetRect.left +
+      (targetRect.width / 2) -
+      (tipRect.width / 2);
+    const top = targetRect.top -
+      tipRect.height;
+
+    this._tip.styles({
+      top: top + 'px',
+      left: left + 'px',
+      width: tipRect.width + 'px',
+      height: tipRect.height + 'px'
+    });
+
+    return this;
+  }
+
+  _deleteTip() {
+    if (this._tip) {
+      this._tip.remove();
+      this._tip = null;
+    }
+
+    return this;
   }
 }

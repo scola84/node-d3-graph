@@ -1,12 +1,9 @@
-import { event } from 'd3-selection';
-
 export default class Bar {
   constructor() {
     this._graph = null;
     this._x = null;
     this._y = null;
 
-    this._formatTip = null;
     this._tip = null;
 
     this._enter = (s) => s.style('opacity', 1);
@@ -19,7 +16,7 @@ export default class Bar {
     }
 
     if (this._tip) {
-      this._tip.hide();
+      this._graph.tip(false);
     }
 
     const bar = this._graph
@@ -65,7 +62,7 @@ export default class Bar {
       return this._tip;
     }
 
-    this._formatTip = value;
+    this._tip = value;
     return this;
   }
 
@@ -106,18 +103,14 @@ export default class Bar {
       .merge(bar)
       .classed('scola-bar', true);
 
-    if (this._formatTip) {
-      if (!this._tip) {
-        this._tip = this._graph.tip(this._formatTip);
-      }
+    if (this._tip) {
+      enter.on('mouseover', (datum) => {
+        this._graph.tip(datum, this._tip);
+      });
 
-      enter
-        .on('mouseover', (...args) => {
-          this._tip.show(...args, event.target);
-        })
-        .on('mouseout', (...args) => {
-          this._tip.hide(...args, event.target);
-        });
+      enter.on('mouseout', () => {
+        this._graph.tip(false);
+      });
     }
 
     const minimize = this._exit(enter.transition());

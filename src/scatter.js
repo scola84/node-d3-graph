@@ -1,12 +1,9 @@
-import { event } from 'd3-selection';
-
 export default class Scatter {
   constructor() {
     this._graph = null;
     this._x = null;
     this._y = null;
 
-    this._formatTip = null;
     this._tip = null;
 
     this._enter = (s) => s.attr('r', 3);
@@ -19,7 +16,7 @@ export default class Scatter {
     }
 
     if (this._tip) {
-      this._tip.hide();
+      this._graph.tip(false);
     }
 
     const scatter = this._graph
@@ -65,7 +62,7 @@ export default class Scatter {
       return this._tip;
     }
 
-    this._formatTip = value;
+    this._tip = value;
     return this;
   }
 
@@ -104,22 +101,16 @@ export default class Scatter {
       .append('circle')
       .merge(scatter)
       .classed('scola-scatter', true)
-      .styles({
-        'fill': 'rgba(0, 0, 0, 0)'
+      .style('fill', 'rgba(0, 0, 0, 0)');
+
+    if (this._tip) {
+      enter.on('mouseover', (datum) => {
+        this._graph.tip(datum, this._tip);
       });
 
-    if (this._formatTip) {
-      if (!this._tip) {
-        this._tip = this._graph.tip(this._formatTip);
-      }
-
-      enter
-        .on('mouseover', (...args) => {
-          this._tip.show(...args, event.target);
-        })
-        .on('mouseout', (...args) => {
-          this._tip.hide(...args, event.target);
-        });
+      enter.on('mouseout', () => {
+        this._graph.tip(false);
+      });
     }
 
     const minimize = this._exit(enter.transition());

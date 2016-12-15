@@ -86,9 +86,7 @@ export default class Line {
         .group()
         .append('path')
         .classed('scola-line', true)
-        .styles({
-          'fill': 'none'
-        });
+        .style('fill', 'none');
     }
 
     const exit = this._exit(this._root.transition());
