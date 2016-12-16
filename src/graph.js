@@ -1,6 +1,7 @@
 import { event, select } from 'd3-selection';
 import { controlBar } from '@scola/d3-generic';
 import 'd3-selection-multi';
+import '@scola/d3-media';
 
 export default class Graph {
   constructor() {
@@ -18,6 +19,8 @@ export default class Graph {
     this._ratio = 1;
     this._duration = 250;
 
+    this._rootMedia = null;
+    this._bodyMedia = null;
     this._message = null;
     this._tip = null;
 
@@ -39,8 +42,9 @@ export default class Graph {
       .classed('scola body', true)
       .styles({
         'background': '#FFF',
-        'border-bottom': '1px solid #CCC',
-        'border-top': '1px solid #CCC',
+        'border-color': '#CCC',
+        'border-style': 'solid',
+        'border-width': '1px 0',
         'display': 'flex',
         'flex-direction': 'column',
         'overflow': 'hidden'
@@ -63,6 +67,16 @@ export default class Graph {
   }
 
   destroy() {
+    if (this._rootMedia) {
+      this._rootMedia.destroy();
+      this._rootMedia = null;
+    }
+
+    if (this._bodyMedia) {
+      this._bodyMedia.destroy();
+      this._bodyMedia = null;
+    }
+
     if (this._message) {
       this._deleteMessage();
     }
@@ -287,16 +301,33 @@ export default class Graph {
     return this;
   }
 
-  inset() {
-    this._root.styles({
-      'padding-left': '1em',
-      'padding-right': '1em'
-    });
+  inset(width = '48em') {
+    if (width === false) {
+      this._rootMedia.destroy();
+      this._rootMedia = null;
 
-    this._body.styles({
-      'border-style': 'none',
-      'border-radius': '0.5em'
-    });
+      this._bodyedia.destroy();
+      this._bodyMedia = null;
+
+      return this;
+    }
+
+    this._rootMedia = this._root
+      .media(`(min-width: ${width})`)
+      .styles({
+        'padding-left': '1em',
+        'padding-right': '1em'
+      })
+      .start();
+
+    this._bodyMedia = this._body
+      .media(`(min-width: ${width})`)
+      .styles({
+        'border-radius': '0.5em',
+        'border-style': 'none',
+        'overflow': 'hidden'
+      })
+      .start();
 
     return this;
   }
