@@ -119,10 +119,14 @@ export default class Bar {
       .transition()
       .duration(0)
       .attr('x', (datum) => this._x.get(datum))
-      .attr('y', (datum) => this._y.get(datum))
       .attr('width', this._x.scale().bandwidth())
+      .attr('y', (datum) => {
+        const barY = this._y.get(datum);
+        return barY === height ? barY - 3 : barY;
+      })
       .attr('height', (datum) => {
-        return height - this._y.get(datum);
+        const barHeight = height - this._y.get(datum);
+        return barHeight === 0 ? 3 : barHeight;
       });
 
     this._enter(position.transition());
