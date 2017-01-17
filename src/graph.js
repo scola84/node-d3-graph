@@ -1,6 +1,7 @@
 import { event, select } from 'd3-selection';
 import { controlBar } from '@scola/d3-generic';
 import 'd3-selection-multi';
+import 'd3-transition';
 import '@scola/d3-media';
 
 export default class Graph {
@@ -21,8 +22,11 @@ export default class Graph {
 
     this._rootMedia = null;
     this._bodyMedia = null;
-    this._message = null;
+
+    this._header = null;
+    this._footer = null;
     this._tip = null;
+    this._message = null;
 
     this._bottom = null;
     this._left = null;
@@ -67,23 +71,11 @@ export default class Graph {
   }
 
   destroy() {
-    if (this._rootMedia) {
-      this._rootMedia.destroy();
-      this._rootMedia = null;
-    }
-
-    if (this._bodyMedia) {
-      this._bodyMedia.destroy();
-      this._bodyMedia = null;
-    }
-
-    if (this._message) {
-      this._deleteMessage();
-    }
-
-    if (this._tip) {
-      this._deleteTip();
-    }
+    this._deleteInset();
+    this._deleteHeader();
+    this._deleteFooter();
+    this._deleteTip();
+    this._deleteMessage();
 
     if (this._bottom) {
       this._bottom.destroy();
@@ -127,60 +119,6 @@ export default class Graph {
     return this._group;
   }
 
-  footer(action) {
-    if (typeof action === 'undefined') {
-      return this._footer;
-    }
-
-    if (action === false) {
-      this._footer.destroy();
-      this._footer = null;
-
-      return this;
-    }
-
-    this._footer = controlBar();
-
-    this._footer.root()
-      .classed('scola footer', true)
-      .styles({
-        'border-top': '1px solid #CCC',
-        'order': 3
-      });
-
-    this._body.node()
-      .appendChild(this._footer.root().node());
-
-    return this;
-  }
-
-  header(action) {
-    if (typeof action === 'undefined') {
-      return this._header;
-    }
-
-    if (action === false) {
-      this._header.destroy();
-      this._header = null;
-
-      return this;
-    }
-
-    this._header = controlBar();
-
-    this._header.root()
-      .classed('scola header', true)
-      .styles({
-        'border-bottom': '1px solid #CCC',
-        'order': 1
-      });
-
-    this._body.node()
-      .appendChild(this._header.root().node());
-
-    return this;
-  }
-
   innerHeight() {
     return this._innerHeight;
   }
@@ -189,12 +127,21 @@ export default class Graph {
     return this._innerWidth;
   }
 
-  width(value = null) {
+  ratio(value = null) {
     if (value === null) {
-      return parseInt(this._svg.style('width'), 10);
+      return this._ratio;
     }
 
-    this._svg.style('width', value + 'px');
+    this._ratio = value;
+    return this;
+  }
+
+  duration(value = null) {
+    if (value === null) {
+      return this._duration;
+    }
+
+    this._duration = value;
     return this;
   }
 
@@ -204,6 +151,15 @@ export default class Graph {
     }
 
     this._svg.style('height', value + 'px');
+    return this;
+  }
+
+  width(value = null) {
+    if (value === null) {
+      return parseInt(this._svg.style('width'), 10);
+    }
+
+    this._svg.style('width', value + 'px');
     return this;
   }
 
@@ -225,32 +181,68 @@ export default class Graph {
     return this;
   }
 
-  ratio(value = null) {
-    if (value === null) {
-      return this._ratio;
+  inset(width = '48em') {
+    if (width === false) {
+      return this._deleteInset();
     }
 
-    this._ratio = value;
+    if (!this._rootMedia) {
+      this._insertInset(width);
+    }
+
     return this;
   }
 
-  duration(value = null) {
-    if (value === null) {
-      return this._duration;
+  header(action = true) {
+    if (action === false) {
+      return this._deleteHeader();
     }
 
-    this._duration = value;
-    return this;
+    if (!this._header) {
+      this._insertHeader();
+    }
+
+    return this._header;
   }
 
-  append(item, action) {
-    if (action === true) {
-      this._collection.add(item.graph(this));
-    } else if (action === false) {
-      this._collection.delete(item);
+  footer(action = true) {
+    if (action === false) {
+      return this._deleteFooter();
     }
 
-    return this;
+    if (!this._footer) {
+      this._insertFooter();
+    }
+
+    return this._footer;
+  }
+
+  tip(datum = null, format = null) {
+    if (datum === null) {
+      return this._tip;
+    }
+
+    if (datum === false) {
+      return this._deleteTip();
+    }
+
+    return this._insertTip(datum, format);
+  }
+
+  message(value = null) {
+    if (value === null) {
+      return this._message;
+    }
+
+    if (value === false) {
+      return this._deleteMessage();
+    }
+
+    if (this._message) {
+      return this._updateMessage(value);
+    }
+
+    return this._insertMessage(value);
   }
 
   bottom(value = null) {
@@ -289,63 +281,14 @@ export default class Graph {
     return this;
   }
 
-  message(text) {
-    if (!this._message) {
-      this._insertMessage();
-    }
-
-    if (this._message) {
-      this._message.text(text);
+  append(item, action = true) {
+    if (action === true) {
+      this._collection.add(item.graph(this));
+    } else if (action === false) {
+      this._collection.delete(item);
     }
 
     return this;
-  }
-
-  inset(width = '48em') {
-    if (width === false) {
-      this._rootMedia.destroy();
-      this._rootMedia = null;
-
-      this._bodyedia.destroy();
-      this._bodyMedia = null;
-
-      return this;
-    }
-
-    this._rootMedia = this._root
-      .media(`(min-width: ${width})`)
-      .styles({
-        'padding-left': '1em',
-        'padding-right': '1em'
-      })
-      .start();
-
-    this._bodyMedia = this._body
-      .media(`(min-width: ${width})`)
-      .styles({
-        'border-radius': '0.5em',
-        'border-style': 'none',
-        'overflow': 'hidden'
-      })
-      .start();
-
-    return this;
-  }
-
-  tip(datum = null, format = null) {
-    if (datum === null) {
-      return this._tip;
-    }
-
-    if (datum === false) {
-      return this._deleteTip();
-    }
-
-    if (format === null) {
-      return this;
-    }
-
-    return this._insertTip(datum, format);
   }
 
   render(data, key) {
@@ -442,45 +385,89 @@ export default class Graph {
     return this;
   }
 
-  _setPosition(left, top) {
-    this._group
-      .attr('transform', `translate(${left},${top})`)
-      .selectAll('text')
-      .style('font-size', '0.9em');
+  _insertInset(width) {
+    this._rootMedia = this._root
+      .media(`(min-width: ${width})`)
+      .styles({
+        'padding-left': '1em',
+        'padding-right': '1em'
+      })
+      .start();
+
+    this._bodyMedia = this._body
+      .media(`(min-width: ${width})`)
+      .styles({
+        'border-radius': '0.5em',
+        'border-style': 'none',
+        'overflow': 'hidden'
+      })
+      .start();
+
+    return this;
   }
 
-  _insertMessage() {
-    const x = this.width() / 2;
-    const y = this.height() / 2;
-
-    if (Number.isNaN(x)) {
-      return;
+  _deleteInset() {
+    if (this._rootMedia) {
+      this._rootMedia.destroy();
+      this._rootMedia = null;
     }
 
-    this._message = this._svg
-      .append('text')
-      .classed('scola message', true)
-      .attrs({
-        'alignment-baseline': 'central',
-        'text-anchor': 'middle',
-        'transform': `translate(${x}, ${y})`
-      })
-      .style('opacity', 0);
+    if (this._bodyMedia) {
+      this._bodyMedia.destroy();
+      this._bodyMedia = null;
+    }
 
-    this._message
-      .transition()
-      .duration(this._duration)
-      .style('opacity', 1);
+    return this;
   }
 
-  _deleteMessage() {
-    this._message
-      .transition()
-      .duration(this._duration)
-      .style('opacity', 0)
-      .remove();
+  _insertHeader() {
+    this._header = controlBar();
 
-    this._message = null;
+    this._header.root()
+      .classed('scola header', true)
+      .styles({
+        'border-bottom': '1px solid #CCC',
+        'order': 1
+      });
+
+    this._body.node()
+      .appendChild(this._header.root().node());
+
+    return this;
+  }
+
+  _deleteHeader() {
+    if (this._header) {
+      this._header.destroy();
+      this._header = null;
+    }
+
+    return this;
+  }
+
+  _insertFooter() {
+    this._footer = controlBar();
+
+    this._footer.root()
+      .classed('scola footer', true)
+      .styles({
+        'border-top': '1px solid #CCC',
+        'order': 3
+      });
+
+    this._body.node()
+      .appendChild(this._footer.root().node());
+
+    return this;
+  }
+
+  _deleteFooter() {
+    if (this._footer) {
+      this._footer.destroy();
+      this._footer = null;
+    }
+
+    return this;
   }
 
   _insertTip(datum, format) {
@@ -525,5 +512,58 @@ export default class Graph {
     }
 
     return this;
+  }
+
+  _insertMessage(text) {
+    const x = this.width() / 2;
+    const y = this.height() / 2;
+
+    if (Number.isNaN(x)) {
+      return this;
+    }
+
+    this._message = this._svg
+      .append('text')
+      .classed('scola message', true)
+      .attrs({
+        'alignment-baseline': 'central',
+        'text-anchor': 'middle',
+        'transform': `translate(${x}, ${y})`
+      })
+      .style('opacity', 0)
+      .text(text);
+
+    this._message
+      .transition()
+      .duration(this._duration)
+      .style('opacity', 1);
+
+    return this;
+  }
+
+  _updateMessage(text) {
+    this._message.text(text);
+    return this;
+  }
+
+  _deleteMessage() {
+    if (this._message) {
+      this._message
+        .transition()
+        .duration(this._duration)
+        .style('opacity', 0)
+        .remove();
+
+      this._message = null;
+    }
+
+    return this;
+  }
+
+  _setPosition(left, top) {
+    this._group
+      .attr('transform', `translate(${left},${top})`)
+      .selectAll('text')
+      .style('font-size', '0.9em');
   }
 }

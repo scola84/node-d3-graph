@@ -1,3 +1,5 @@
+import 'd3-transition';
+
 export default class Scatter {
   constructor() {
     this._graph = null;

@@ -1,12 +1,14 @@
 /* eslint prefer-reflect: "off" */
 
+import 'd3-transition';
+
 export default class Axis {
   constructor() {
     this._root = null;
     this._graph = null;
     this._axis = null;
-    this._scale = null;
     this._domain = null;
+    this._scale = null;
     this._value = null;
     this._grid = false;
     this._data = [];
@@ -29,6 +31,15 @@ export default class Axis {
     return this._root;
   }
 
+  graph(value = null) {
+    if (value === null) {
+      return this._graph;
+    }
+
+    this._graph = value;
+    return this;
+  }
+
   axis(value = null) {
     if (value === null) {
       return this._axis;
@@ -47,15 +58,6 @@ export default class Axis {
     return this;
   }
 
-  graph(value = null) {
-    if (value === null) {
-      return this._graph;
-    }
-
-    this._graph = value;
-    return this;
-  }
-
   scale(value = null) {
     if (value === null) {
       return this._scale;
@@ -67,12 +69,12 @@ export default class Axis {
     return this;
   }
 
-  value(v = null) {
-    if (v === null) {
+  value(axisValue = null) {
+    if (axisValue === null) {
       return this._value;
     }
 
-    this._value = v;
+    this._value = axisValue;
     return this;
   }
 
