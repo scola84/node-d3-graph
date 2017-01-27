@@ -1,5 +1,5 @@
 import { event, select } from 'd3-selection';
-import { controlBar } from '@scola/d3-generic';
+import { mainBar } from '@scola/d3-control';
 import 'd3-selection-multi';
 import 'd3-transition';
 import '@scola/d3-media';
@@ -421,7 +421,7 @@ export default class Graph {
   }
 
   _insertHeader() {
-    this._header = controlBar();
+    this._header = mainBar();
 
     this._header.root()
       .classed('scola header', true)
@@ -431,7 +431,7 @@ export default class Graph {
       });
 
     this._body.node()
-      .appendChild(this._header.root().node());
+      .insertBefore(this._header.root().node(), this._outer.node());
 
     return this;
   }
@@ -446,7 +446,7 @@ export default class Graph {
   }
 
   _insertFooter() {
-    this._footer = controlBar();
+    this._footer = mainBar();
 
     this._footer.root()
       .classed('scola footer', true)
