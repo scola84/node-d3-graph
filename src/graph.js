@@ -1,4 +1,5 @@
 import { event, select } from 'd3-selection';
+import isEqual from 'lodash-es/isEqual';
 import { mainBar } from '@scola/d3-control';
 import 'd3-selection-multi';
 import 'd3-transition';
@@ -34,6 +35,7 @@ export default class Graph {
     this._top = null;
 
     this._collection = new Set();
+    this._data = null;
 
     this._root = select('body')
       .append('div')
@@ -292,9 +294,12 @@ export default class Graph {
   }
 
   render(data, key) {
-    if (this._message) {
-      this._deleteMessage();
+    if (isEqual(data, this._data)) {
+      return this;
     }
+
+    this._deleteMessage();
+    this._data = data;
 
     const width = this.width();
 
