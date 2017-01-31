@@ -565,8 +565,6 @@ export default class Graph {
   }
 
   _insertMessage(text) {
-    console.log('_insertMessage', text);
-
     this._message = this._outer
       .append('div')
       .classed('scola message', true)
@@ -588,13 +586,11 @@ export default class Graph {
   }
 
   _updateMessage(text) {
-    console.log('_updateMessage', text);
     this._message.text(text);
     return this;
   }
 
   _deleteMessage() {
-    console.log('_deleteMessage');
     if (this._message) {
       this._message.remove();
       this._message = null;
