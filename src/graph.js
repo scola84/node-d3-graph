@@ -27,7 +27,9 @@ export default class Graph {
     this._header = null;
     this._footer = null;
     this._tip = null;
+
     this._message = null;
+    this._timeout = null;
 
     this._bottom = null;
     this._left = null;
@@ -36,12 +38,15 @@ export default class Graph {
 
     this._collection = new Set();
     this._data = null;
+    this._key = null;
 
     this._root = select('body')
       .append('div')
       .remove()
       .classed('scola graph', true)
-      .style('padding-bottom', '3em');
+      .styles({
+        'padding-bottom': '3em'
+      });
 
     this._body = this._root
       .append('div')
@@ -59,7 +64,10 @@ export default class Graph {
     this._outer = this._body
       .append('div')
       .classed('scola svg', true)
-      .style('order', 2);
+      .styles({
+        'order': 2,
+        'position': 'relative'
+      });
 
     this._svg = this._outer
       .append('svg')
@@ -149,7 +157,7 @@ export default class Graph {
 
   height(value = null) {
     if (value === null) {
-      return parseInt(this._svg.style('height'), 10);
+      return parseFloat(this._svg.style('height'));
     }
 
     this._svg.style('height', value + 'px');
@@ -158,7 +166,7 @@ export default class Graph {
 
   width(value = null) {
     if (value === null) {
-      return parseInt(this._svg.style('width'), 10);
+      return parseFloat(this._svg.style('width'));
     }
 
     this._svg.style('width', value + 'px');
@@ -236,15 +244,27 @@ export default class Graph {
       return this._message;
     }
 
+    clearTimeout(this._timeout);
+
     if (value === false) {
       return this._deleteMessage();
     }
+
+    this._data = null;
 
     if (this._message) {
       return this._updateMessage(value);
     }
 
     return this._insertMessage(value);
+  }
+
+  loading(value = null, delay = 250) {
+    clearTimeout(this._timeout);
+
+    this._timeout = setTimeout(() => {
+      this.message(value);
+    }, delay);
   }
 
   bottom(value = null) {
@@ -293,22 +313,27 @@ export default class Graph {
     return this;
   }
 
-  render(data, key) {
+  render(data = null, key = null) {
+    if (data === null) {
+      data = this._data;
+      key = this._key;
+
+      this._data = null;
+      this._key = null;
+    }
+
     if (isEqual(data, this._data)) {
       return this;
     }
 
-    this._deleteMessage();
+    this.message(false);
+
+
     this._data = data;
+    this._key = key;
 
     const width = this.width();
-
-    if (Number.isNaN(width)) {
-      return this;
-    }
-
-    const height = width * this._ratio;
-    this.height(height);
+    const height = this.height();
 
     let marginBottom = this._margin.bottom;
     let marginLeft = this._margin.left;
@@ -317,25 +342,25 @@ export default class Graph {
 
     if (this._bottom) {
       marginBottom += this._bottom
-        .data(data)
+        .data(this._data)
         .height();
     }
 
     if (this._left) {
       marginLeft += this._left
-        .data(data)
+        .data(this._data)
         .width();
     }
 
     if (this._right) {
       marginRight += this._right
-        .data(data)
+        .data(this._data)
         .width();
     }
 
     if (this._top) {
       marginTop += this._top
-        .data(data)
+        .data(this._data)
         .height();
     }
 
@@ -379,13 +404,33 @@ export default class Graph {
       this._top.top();
     }
 
-    if (data.length > 0) {
+    if (this._data.length > 0) {
       this._setPosition(marginLeft, marginTop);
     }
 
     this._collection.forEach((item) => {
-      item.render(data, key);
+      item.render(this._data, this._key);
     });
+
+    return this;
+  }
+
+  resize() {
+    const width = this.width();
+
+    if (Number.isNaN(width)) {
+      return this;
+    }
+
+    const oldHeight = this.height();
+    const newHeight = width * this._ratio;
+
+    if (oldHeight === newHeight) {
+      return this;
+    }
+
+    this.height(newHeight);
+    this.render();
 
     return this;
   }
@@ -520,45 +565,38 @@ export default class Graph {
   }
 
   _insertMessage(text) {
-    const x = this.width() / 2;
-    const y = this.height() / 2;
+    console.log('_insertMessage', text);
 
-    if (Number.isNaN(x)) {
-      return this;
-    }
-
-    this._message = this._svg
-      .append('text')
+    this._message = this._outer
+      .append('div')
       .classed('scola message', true)
-      .attrs({
-        'alignment-baseline': 'central',
-        'text-anchor': 'middle',
-        'transform': `translate(${x}, ${y})`
+      .styles({
+        'align-items': 'center',
+        'background': '#FFF',
+        'display': 'flex',
+        'height': '100%',
+        'justify-content': 'center',
+        'left': 0,
+        'position': 'absolute',
+        'top': 0,
+        'width': '100%',
+        'z-index': 1
       })
-      .style('opacity', 0)
       .text(text);
-
-    this._message
-      .transition()
-      .duration(this._duration)
-      .style('opacity', 1);
 
     return this;
   }
 
   _updateMessage(text) {
+    console.log('_updateMessage', text);
     this._message.text(text);
     return this;
   }
 
   _deleteMessage() {
+    console.log('_deleteMessage');
     if (this._message) {
-      this._message
-        .transition()
-        .duration(this._duration)
-        .style('opacity', 0)
-        .remove();
-
+      this._message.remove();
       this._message = null;
     }
 
