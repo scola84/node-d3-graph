@@ -1,6 +1,6 @@
 import { event, select } from 'd3-selection';
 import isEqual from 'lodash-es/isEqual';
-import { mainBar } from '@scola/d3-control';
+import { controlBar } from '@scola/d3-control';
 import 'd3-selection-multi';
 import 'd3-transition';
 import '@scola/d3-media';
@@ -304,13 +304,11 @@ export default class Graph {
   }
 
   append(item, action = true) {
-    if (action === true) {
-      this._collection.add(item.graph(this));
-    } else if (action === false) {
-      this._collection.delete(item);
+    if (action === false) {
+      return this._deleteItem(item);
     }
 
-    return this;
+    return this._insertItem(item);
   }
 
   render(data = null, key = null) {
@@ -325,9 +323,6 @@ export default class Graph {
     if (isEqual(data, this._data)) {
       return this;
     }
-
-    this.message(false);
-
 
     this._data = data;
     this._key = key;
@@ -471,7 +466,7 @@ export default class Graph {
   }
 
   _insertHeader() {
-    this._header = mainBar();
+    this._header = controlBar();
 
     this._header.root()
       .classed('scola header', true)
@@ -496,7 +491,7 @@ export default class Graph {
   }
 
   _insertFooter() {
-    this._footer = mainBar();
+    this._footer = controlBar();
 
     this._footer.root()
       .classed('scola footer', true)
@@ -596,6 +591,16 @@ export default class Graph {
     }
 
     return this;
+  }
+
+  _insertItem(item) {
+    this._collection.add(item.graph(this));
+    return item;
+  }
+
+  _deleteItem(item) {
+    this._collection.delete(item);
+    return item;
   }
 
   _setPosition(left, top) {
