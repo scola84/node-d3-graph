@@ -3,6 +3,7 @@ import isEqual from 'lodash-es/isEqual';
 import { controlBar } from '@scola/d3-control';
 import 'd3-selection-multi';
 import 'd3-transition';
+import '@scola/d3-gesture';
 import '@scola/d3-media';
 
 export default class Graph {
@@ -78,9 +79,12 @@ export default class Graph {
 
     this._group = this._svg
       .append('g');
+
+    this._bindBody();
   }
 
   destroy() {
+    this._unbindBody();
     this._deleteInset();
     this._deleteHeader();
     this._deleteFooter();
@@ -428,6 +432,25 @@ export default class Graph {
     this.render();
 
     return this;
+  }
+
+  _bindBody() {
+    this._gesture = this._body
+      .gesture()
+      .on('panstart', (e) => e.stopPropagation())
+      .on('panright', (e) => e.stopPropagation())
+      .on('panleft', (e) => e.stopPropagation())
+      .on('panend', (e) => e.stopPropagation())
+      .on('swiperight', (e) => e.stopPropagation())
+      .on('swipeleft', (e) => e.stopPropagation())
+      .on('tap', (e) => e.stopPropagation());
+  }
+
+  _unbindBody() {
+    if (this._gesture) {
+      this._gesture.destroy();
+      this._gesture = null;
+    }
   }
 
   _insertInset(width) {
