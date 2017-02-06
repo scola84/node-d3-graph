@@ -106,11 +106,11 @@ export default class Bar {
       .classed('scola-bar', true);
 
     if (this._tip) {
-      enter.on('mouseover', (datum) => {
+      enter.on('mouseover.scola-graph', (datum) => {
         this._graph.tip(datum, this._tip);
       });
 
-      enter.on('mouseout', () => {
+      enter.on('mouseout.scola-graph', () => {
         this._graph.tip(false);
       });
     }
