@@ -1,7 +1,5 @@
 /* eslint prefer-reflect: "off" */
 
-import 'd3-transition';
-
 export default class Axis {
   constructor() {
     this._root = null;
@@ -22,7 +20,9 @@ export default class Axis {
       return;
     }
 
-    const exit = this._exit(this._root.transition());
+    const exit = this
+      ._exit(this._root.transition(), this);
+
     this._root = null;
     exit.remove();
   }
@@ -45,7 +45,10 @@ export default class Axis {
       return this._axis;
     }
 
-    this._axis = value;
+    this._axis = value
+      .tickPadding(10)
+      .tickSize(0);
+
     return this;
   }
 
@@ -107,7 +110,7 @@ export default class Axis {
 
   data(value) {
     this._data = value;
-    this._scale.domain(this._domain(value));
+    this._scale.domain(this._domain(value, this));
 
     return this;
   }
@@ -130,8 +133,9 @@ export default class Axis {
     this._render(-this._graph.innerHeight());
 
     if (this._data.length > 0) {
-      this._root.attr('transform',
-        `translate(0,${this._graph.innerHeight()})`);
+      this._all();
+      this._horizontal();
+      this._bottom();
     }
 
     return this;
@@ -139,6 +143,11 @@ export default class Axis {
 
   left() {
     this._render(-this._graph.innerWidth());
+
+    this._all();
+    this._vertical();
+    this._left();
+
     return this;
   }
 
@@ -146,8 +155,9 @@ export default class Axis {
     this._render(-this._graph.innerWidth());
 
     if (this._data.length > 0) {
-      this._root.attr('transform',
-        `translate(${this._graph.innerWidth()},0)`);
+      this._all();
+      this._vertical();
+      this._right();
     }
 
     return this;
@@ -155,6 +165,10 @@ export default class Axis {
 
   top() {
     this._render(-this._graph.innerHeight());
+
+    this._all();
+    this._horizontal();
+
     return this;
   }
 
@@ -171,12 +185,12 @@ export default class Axis {
     }
 
     if (this._data.length === 0) {
-      this._exit(this._root.transition());
+      this._exit(this._root.transition(), this);
       return;
     }
 
     this
-      ._enter(this._root.transition(), this._data)
+      ._enter(this._root.transition(), this._data, this)
       .call(this._axis);
   }
 
@@ -203,5 +217,63 @@ export default class Axis {
     node.remove();
 
     return size;
+  }
+
+  _all() {
+    this._root
+      .select('path')
+      .style('display', 'none');
+
+    this._root
+      .selectAll('line')
+      .style('opacity', 0.2);
+  }
+
+  _horizontal() {
+    const ticks = this._root
+      .selectAll('.tick');
+
+    ticks
+      .filter((datum, index) => {
+        return index % Math.ceil(ticks.size() /
+          (this._graph.innerWidth() / 100)) !== 0;
+      })
+      .remove();
+  }
+
+  _vertical() {
+    this._root
+      .selectAll('text')
+      .attr('dy', '-0.35em');
+  }
+
+  _bottom() {
+    this._root.attr('transform',
+      `translate(0,${this._graph.innerHeight()})`);
+  }
+
+  _left() {
+    this._root
+      .selectAll('line')
+      .attr('x1', -this.width());
+
+    this._root
+      .selectAll('text')
+      .attr('text-anchor', 'start')
+      .attr('dx', -this.width() + 16);
+  }
+
+  _right() {
+    this._root.attr('transform',
+      `translate(${this._graph.innerWidth()},0)`);
+
+    this._root
+      .selectAll('line')
+      .attr('x1', this.width());
+
+    this._root
+      .selectAll('text')
+      .attr('text-anchor', 'end')
+      .attr('dx', this.width() - 16);
   }
 }

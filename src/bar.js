@@ -1,6 +1,4 @@
-import 'd3-transition';
-
-export default class Bar {
+export default class BarPlot {
   constructor() {
     this._graph = null;
     this._x = null;
@@ -14,7 +12,7 @@ export default class Bar {
 
   destroy() {
     if (!this._graph) {
-      return this;
+      return;
     }
 
     if (this._tip) {
@@ -25,11 +23,10 @@ export default class Bar {
       .group()
       .selectAll('.scola-bar');
 
-    const exit = this._exit(bar
-      .transition());
+    const exit = this
+      ._exit(bar.transition(), this);
 
     exit.remove();
-    return this;
   }
 
   graph(value = null) {
@@ -87,7 +84,9 @@ export default class Bar {
   }
 
   render(data, key) {
-    const height = this._graph.innerHeight();
+    const height = this._graph
+      .innerHeight();
+
     const bar = this._graph
       .group()
       .selectAll('.scola-bar')
@@ -95,7 +94,7 @@ export default class Bar {
 
     const exit = this._exit(bar
       .exit()
-      .transition());
+      .transition(), this);
 
     exit.remove();
 
@@ -115,7 +114,8 @@ export default class Bar {
       });
     }
 
-    const minimize = this._exit(enter.transition());
+    const minimize = this
+      ._exit(enter.transition(), this);
 
     const position = minimize
       .transition()
@@ -131,6 +131,6 @@ export default class Bar {
         return barHeight === 0 ? 3 : barHeight;
       });
 
-    this._enter(position.transition());
+    this._enter(position.transition(), this);
   }
 }

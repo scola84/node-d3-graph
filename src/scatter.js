@@ -1,6 +1,4 @@
-import 'd3-transition';
-
-export default class Scatter {
+export default class ScatterPlot {
   constructor() {
     this._graph = null;
     this._x = null;
@@ -14,7 +12,7 @@ export default class Scatter {
 
   destroy() {
     if (!this._graph) {
-      return this;
+      return;
     }
 
     if (this._tip) {
@@ -25,11 +23,10 @@ export default class Scatter {
       .group()
       .selectAll('.scola-scatter');
 
-    const exit = this._exit(scatter
-      .transition());
+    const exit = this
+      ._exit(scatter.transition(), this);
 
     exit.remove();
-    return this;
   }
 
   graph(value = null) {
@@ -94,7 +91,7 @@ export default class Scatter {
 
     const exit = this._exit(scatter
       .exit()
-      .transition());
+      .transition(), this);
 
     exit.remove();
 
@@ -115,7 +112,8 @@ export default class Scatter {
       });
     }
 
-    const minimize = this._exit(enter.transition());
+    const minimize = this
+      ._exit(enter.transition(), this);
 
     const position = minimize
       .transition()
@@ -123,6 +121,6 @@ export default class Scatter {
       .attr('cx', (datum) => this._x.get(datum))
       .attr('cy', (datum) => this._y.get(datum));
 
-    this._enter(position.transition());
+    this._enter(position.transition(), this);
   }
 }

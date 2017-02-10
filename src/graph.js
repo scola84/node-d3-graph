@@ -1,27 +1,21 @@
-import { event, select } from 'd3-selection';
+/* eslint prefer-reflect: "off" */
+
+import { event, select } from 'd3';
 import isEqual from 'lodash-es/isEqual';
 import { controlBar } from '@scola/d3-control';
-import 'd3-selection-multi';
-import 'd3-transition';
-import '@scola/d3-gesture';
-import '@scola/d3-media';
 
 export default class Graph {
   constructor() {
     this._innerHeight = 0;
     this._innerWidth = 0;
 
-    this._margin = {
-      bottom: 16,
-      left: 16,
-      right: 16,
-      top: 16
-    };
+    this._margin = () => 16;
 
     this._offset = -1;
     this._ratio = 1;
-    this._duration = 250;
+    this._size = 'large';
 
+    this._gesture = null;
     this._rootMedia = null;
     this._bodyMedia = null;
 
@@ -117,6 +111,7 @@ export default class Graph {
 
     this._collection.clear();
 
+    this._root.dispatch('destroy');
     this._root.remove();
     this._root = null;
   }
@@ -150,15 +145,6 @@ export default class Graph {
     return this;
   }
 
-  duration(value = null) {
-    if (value === null) {
-      return this._duration;
-    }
-
-    this._duration = value;
-    return this;
-  }
-
   height(value = null) {
     if (value === null) {
       return parseFloat(this._svg.style('height'));
@@ -177,21 +163,23 @@ export default class Graph {
     return this;
   }
 
+  size(value = null) {
+    if (value === null) {
+      return this._size;
+    }
+
+    this._size = value;
+    this.render();
+
+    return this;
+  }
+
   margin(value = null) {
     if (value === null) {
       return this._margin;
     }
 
-    if (typeof value === 'number') {
-      return this.margin({
-        bottom: value,
-        left: value,
-        right: value,
-        top: value
-      });
-    }
-
-    Object.assign(this._margin, value);
+    this._margin = value;
     return this;
   }
 
@@ -334,42 +322,50 @@ export default class Graph {
     const width = this.width();
     const height = this.height();
 
-    let marginBottom = this._margin.bottom;
-    let marginLeft = this._margin.left;
-    let marginRight = this._margin.right;
-    let marginTop = this._margin.top;
+    let margin = this._margin(this._size);
+
+    if (typeof margin === 'number') {
+      margin = {
+        bottom: margin,
+        left: margin,
+        right: margin,
+        top: margin
+      };
+    }
+
+    margin = Object.assign({}, margin);
 
     if (this._bottom) {
-      marginBottom += this._bottom
+      margin.bottom += this._bottom
         .data(this._data)
         .height();
     }
 
     if (this._left) {
-      marginLeft += this._left
+      margin.left += this._left
         .data(this._data)
         .width();
     }
 
     if (this._right) {
-      marginRight += this._right
+      margin.right += this._right
         .data(this._data)
         .width();
     }
 
     if (this._top) {
-      marginTop += this._top
+      margin.top += this._top
         .data(this._data)
         .height();
     }
 
     this._innerHeight = height -
-      marginTop -
-      marginBottom;
+      margin.top -
+      margin.bottom;
 
     this._innerWidth = width -
-      marginLeft -
-      marginRight;
+      margin.left -
+      margin.right;
 
     if (this._bottom) {
       this._bottom
@@ -404,7 +400,8 @@ export default class Graph {
     }
 
     if (this._data.length > 0) {
-      this._setPosition(marginLeft, marginTop);
+      this._setPosition(margin.left, margin.top);
+      this._setSize();
     }
 
     this._collection.forEach((item) => {
@@ -455,7 +452,10 @@ export default class Graph {
 
   _insertInset(width) {
     this._rootMedia = this._root
+      .media(`not all and (min-width: ${width})`)
+      .call(() => this.size('small'))
       .media(`(min-width: ${width})`)
+      .call(() => this.size('large'))
       .styles({
         'padding-left': '1em',
         'padding-right': '1em'
@@ -628,8 +628,15 @@ export default class Graph {
 
   _setPosition(left, top) {
     this._group
-      .attr('transform', `translate(${left},${top})`)
+      .attr('transform', `translate(${left},${top})`);
+  }
+
+  _setSize() {
+    this._group
       .selectAll('text')
-      .style('font-size', '0.9em');
+      .style('font-size', () => {
+        return this._size === 'large' ?
+          '0.9em' : '0.75em';
+      });
   }
 }

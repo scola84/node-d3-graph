@@ -1,7 +1,6 @@
-import { line } from 'd3-shape';
-import 'd3-transition';
+import { line } from 'd3';
 
-export default class Line {
+export default class LinePlot {
   constructor() {
     this._graph = null;
     this._x = null;
@@ -18,14 +17,14 @@ export default class Line {
 
   destroy() {
     if (!this._root) {
-      return this;
+      return;
     }
 
-    const exit = this._exit(this._root.transition());
+    const exit = this
+      ._exit(this._root.transition(), this);
+
     this._root = null;
     exit.remove();
-
-    return this;
   }
 
   root() {
@@ -90,7 +89,8 @@ export default class Line {
         .style('fill', 'none');
     }
 
-    const exit = this._exit(this._root.transition());
+    const exit = this
+      ._exit(this._root.transition(), this);
 
     const enter = exit
       .transition()
@@ -98,6 +98,6 @@ export default class Line {
       .attr('d', this._factory(data))
       .transition();
 
-    this._enter(enter);
+    this._enter(enter, this);
   }
 }
