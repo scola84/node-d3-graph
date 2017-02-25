@@ -13,11 +13,11 @@ export default class Graph {
 
     this._offset = -1;
     this._ratio = 1;
-    this._size = 'large';
 
     this._gesture = null;
     this._rootMedia = null;
     this._bodyMedia = null;
+    this._inset = false;
 
     this._header = null;
     this._footer = null;
@@ -163,17 +163,6 @@ export default class Graph {
     return this;
   }
 
-  size(value = null) {
-    if (value === null) {
-      return this._size;
-    }
-
-    this._size = value;
-    this.render();
-
-    return this;
-  }
-
   margin(value = null) {
     if (value === null) {
       return this._margin;
@@ -184,6 +173,10 @@ export default class Graph {
   }
 
   inset(width = '48em') {
+    if (width === null) {
+      return this._inset;
+    }
+
     if (width === false) {
       return this._deleteInset();
     }
@@ -231,7 +224,7 @@ export default class Graph {
     return this._insertTip(datum, format);
   }
 
-  message(value = null) {
+  message(value = null, delay = null) {
     if (value === null) {
       return this._message;
     }
@@ -242,6 +235,10 @@ export default class Graph {
       return this._deleteMessage();
     }
 
+    if (delay !== null) {
+      return this._delayMessage(value, delay);
+    }
+
     this._data = null;
 
     if (this._message) {
@@ -249,14 +246,6 @@ export default class Graph {
     }
 
     return this._insertMessage(value);
-  }
-
-  loading(value = null, delay = 250) {
-    clearTimeout(this._timeout);
-
-    this._timeout = setTimeout(() => {
-      this.message(value);
-    }, delay);
   }
 
   bottom(value = null) {
@@ -322,7 +311,7 @@ export default class Graph {
     const width = this.width();
     const height = this.height();
 
-    let margin = this._margin(this._size);
+    let margin = this._margin(this._inset);
 
     if (typeof margin === 'number') {
       margin = {
@@ -453,9 +442,9 @@ export default class Graph {
   _insertInset(width) {
     this._rootMedia = this._root
       .media(`not all and (min-width: ${width})`)
-      .call(() => this.size('small'))
+      .call(() => { this._inset = false; })
       .media(`(min-width: ${width})`)
-      .call(() => this.size('large'))
+      .call(() => { this._inset = true; })
       .styles({
         'padding-left': '1em',
         'padding-right': '1em'
@@ -523,8 +512,8 @@ export default class Graph {
         'order': 3
       });
 
-    this._body.node()
-      .appendChild(this._footer.root().node());
+    this._body
+      .append(() => this._footer.root().node());
 
     return this;
   }
@@ -616,6 +605,18 @@ export default class Graph {
     return this;
   }
 
+  _delayMessage(text, delay) {
+    delay = delay === true ? 250 : delay;
+
+    clearTimeout(this._timeout);
+
+    this._timeout = setTimeout(() => {
+      this.message(text);
+    }, delay);
+
+    return this;
+  }
+
   _insertItem(item) {
     this._collection.add(item.graph(this));
     return item;
@@ -635,7 +636,7 @@ export default class Graph {
     this._group
       .selectAll('text')
       .style('font-size', () => {
-        return this._size === 'large' ?
+        return this._inset === true ?
           '0.9em' : '0.75em';
       });
   }
