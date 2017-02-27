@@ -22,6 +22,7 @@ export default class Graph {
     this._header = null;
     this._footer = null;
     this._tip = null;
+    this._equalizer = null;
 
     this._message = null;
     this._timeout = null;
@@ -79,6 +80,8 @@ export default class Graph {
 
   destroy() {
     this._unbindBody();
+    this._unbindEqualizer();
+
     this._deleteInset();
     this._deleteHeader();
     this._deleteFooter();
@@ -222,6 +225,17 @@ export default class Graph {
     }
 
     return this._insertTip(datum, format);
+  }
+
+  equalizer(element = null) {
+    if (element === null) {
+      return this._equalizer;
+    }
+
+    this._equalizer = element;
+    this._bindEqualizer();
+
+    return this;
   }
 
   message(value = null, delay = null) {
@@ -400,26 +414,6 @@ export default class Graph {
     return this;
   }
 
-  resize() {
-    const width = this.width();
-
-    if (Number.isNaN(width)) {
-      return this;
-    }
-
-    const oldHeight = this.height();
-    const newHeight = width * this._ratio;
-
-    if (oldHeight === newHeight) {
-      return this;
-    }
-
-    this.height(newHeight);
-    this.render();
-
-    return this;
-  }
-
   _bindBody() {
     this._gesture = this._body
       .gesture()
@@ -436,6 +430,20 @@ export default class Graph {
     if (this._gesture) {
       this._gesture.destroy();
       this._gesture = null;
+    }
+  }
+
+  _bindEqualizer() {
+    if (this._equalizer) {
+      this._equalizer.root().on('resize.scola-graph', () => {
+        this._equalize();
+      });
+    }
+  }
+
+  _unbindEqualizer() {
+    if (this._equalizer) {
+      this._equalizer.root().on('resize.scola-graph', null);
     }
   }
 
@@ -630,6 +638,26 @@ export default class Graph {
   _setPosition(left, top) {
     this._group
       .attr('transform', `translate(${left},${top})`);
+  }
+
+  _equalize() {
+    const width = this.width();
+
+    if (Number.isNaN(width)) {
+      return this;
+    }
+
+    const oldHeight = this.height();
+    const newHeight = width * this._ratio;
+
+    if (oldHeight === newHeight) {
+      return this;
+    }
+
+    this.height(newHeight);
+    this.render();
+
+    return this;
   }
 
   _setSize() {
