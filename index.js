@@ -4,22 +4,30 @@ import Graph from './src/graph';
 import LinePlot from './src/line';
 import ScatterPlot from './src/scatter';
 
-export function axis() {
+function axis() {
   return new Axis();
 }
 
-export function barPlot() {
+function barPlot() {
   return new BarPlot();
 }
 
-export function graph() {
+function graph() {
   return new Graph();
 }
 
-export function linePlot() {
+function linePlot() {
   return new LinePlot();
 }
 
-export function scatterPlot() {
+function scatterPlot() {
   return new ScatterPlot();
 }
+
+export {
+  axis,
+  barPlot,
+  graph,
+  linePlot,
+  scatterPlot
+};
