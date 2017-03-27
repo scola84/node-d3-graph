@@ -184,7 +184,7 @@ export default class Graph {
       return this._deleteInset();
     }
 
-    if (!this._rootMedia) {
+    if (this._rootMedia === null) {
       this._insertInset(width);
     }
 
@@ -196,7 +196,7 @@ export default class Graph {
       return this._deleteHeader();
     }
 
-    if (!this._header) {
+    if (this._header === null) {
       this._insertHeader();
     }
 
@@ -208,7 +208,7 @@ export default class Graph {
       return this._deleteFooter();
     }
 
-    if (!this._footer) {
+    if (this._footer === null) {
       this._insertFooter();
     }
 
@@ -315,7 +315,7 @@ export default class Graph {
       this._key = null;
     }
 
-    if (isEqual(data, this._data)) {
+    if (isEqual(data, this._data) === true) {
       return this;
     }
 
@@ -643,7 +643,7 @@ export default class Graph {
   _equalize() {
     const width = this.width();
 
-    if (Number.isNaN(width)) {
+    if (Number.isNaN(width) === true) {
       return this;
     }
 

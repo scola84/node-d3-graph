@@ -16,7 +16,7 @@ export default class LinePlot {
   }
 
   destroy() {
-    if (!this._root) {
+    if (this._root === null) {
       return;
     }
 
@@ -81,7 +81,7 @@ export default class LinePlot {
   }
 
   render(data) {
-    if (!this._root) {
+    if (this._root === null) {
       this._root = this._graph
         .group()
         .append('path')

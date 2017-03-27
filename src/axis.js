@@ -16,7 +16,7 @@ export default class Axis {
   }
 
   destroy() {
-    if (!this._root) {
+    if (this._root === null) {
       return;
     }
 
@@ -177,7 +177,7 @@ export default class Axis {
       this._axis.tickSizeInner(gridSize);
     }
 
-    if (!this._root) {
+    if (this._root === null) {
       this._root = this._graph
         .group()
         .append('g')
@@ -195,17 +195,23 @@ export default class Axis {
   }
 
   _size(attr) {
-    const format = this._axis.tickFormat() ||
-      this._scale.tickFormat && this._scale.tickFormat();
+    const format =
+      this._axis.tickFormat() ||
+      this._scale.tickFormat &&
+      this._scale.tickFormat();
 
-    const longest = !this._scale.ticks ? '0' : this._scale
-      .ticks(...this._axis.tickArguments())
-      .map(format)
-      .reduce((max, tick) => {
-        return String(tick).length > max.length ?
-          String(tick) :
-          max;
-      }, '');
+    let longest = '0';
+
+    if (typeof this._scale.ticks === 'function') {
+      longest = this._scale
+        .ticks(...this._axis.tickArguments())
+        .map(format)
+        .reduce((max, tick) => {
+          return String(tick).length > max.length ?
+            String(tick) :
+            max;
+        }, '');
+    }
 
     const node = this._graph
       .svg()

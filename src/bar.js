@@ -11,7 +11,7 @@ export default class BarPlot {
   }
 
   destroy() {
-    if (!this._graph) {
+    if (this._graph === null) {
       return;
     }
 
