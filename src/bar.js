@@ -1,96 +1,84 @@
-export default class BarPlot {
-  constructor() {
-    this._graph = null;
-    this._x = null;
-    this._y = null;
+import after from 'lodash/after';
+import Plot from './plot';
 
-    this._tip = null;
+export default class BarPlot extends Plot {
+  constructor() {
+    super();
+
+    this._root = null;
+    this._group = null;
+    this._height = 0;
 
     this._enter = (s) => s.style('opacity', 1);
     this._exit = (s) => s.style('opacity', 0);
   }
 
   destroy() {
-    if (this._graph === null) {
+    if (this._root === null) {
       return;
     }
 
-    if (this._tip) {
-      this._graph.tip(false);
-    }
+    const rect = this._root
+      .selectAll('rect');
 
-    const bar = this._graph
-      .group()
-      .selectAll('.scola-bar');
+    this._unbindTip(rect);
 
     const exit = this
-      ._exit(bar.transition(), this);
+      ._exit(rect.transition(), this);
 
-    exit.remove();
+    const end = after(rect.size(), () => {
+      this._root.remove();
+      this._root = null;
+    });
+
+    exit
+      .remove()
+      .on('end', end);
   }
 
-  graph(value = null) {
+  group(value = null) {
     if (value === null) {
-      return this._graph;
+      return this._group;
     }
 
-    this._graph = value;
+    this._group = value;
     return this;
   }
 
-  x(value = null) {
-    if (value === null) {
-      return this._x;
+  render(data, keys = null) {
+    if (this._root === null) {
+      this._root = this._graph
+        .group()
+        .append('g')
+        .classed('scola bar', true);
     }
 
-    this._x = value;
-    return this;
-  }
-
-  y(value = null) {
-    if (value === null) {
-      return this._y;
-    }
-
-    this._y = value;
-    return this;
-  }
-
-  tip(value = null) {
-    if (value === null) {
-      return this._tip;
-    }
-
-    this._tip = value;
-    return this;
-  }
-
-  enter(value = null) {
-    if (value === null) {
-      return this._enter;
-    }
-
-    this._enter = value;
-    return this;
-  }
-
-  exit(value = null) {
-    if (value === null) {
-      return this._exit;
-    }
-
-    this._exit = value;
-    return this;
-  }
-
-  render(data, key) {
-    const height = this._graph
+    this._height = this._graph
       .innerHeight();
 
-    const bar = this._graph
-      .group()
-      .selectAll('.scola-bar')
-      .data(data, key);
+    let groups = this._root;
+
+    if (keys !== null) {
+      this._group
+        .domain(keys)
+        .range([0, this._attrWidth()]);
+
+      groups = groups
+        .selectAll('g')
+        .data(data);
+
+      groups = groups
+        .enter()
+        .append('g')
+        .attr('transform', (d) => this._attrTransform(d))
+        .merge(groups);
+
+      data = (d) => this._data(d, keys);
+    }
+
+    const bar = groups
+      .selectAll('rect')
+      .data(data);
 
     const exit = this._exit(bar
       .exit()
@@ -101,36 +89,60 @@ export default class BarPlot {
     const enter = bar
       .enter()
       .append('rect')
-      .merge(bar)
-      .classed('scola-bar', true);
+      .merge(bar);
 
-    if (this._tip) {
-      enter.on('mouseover.scola-graph', (datum) => {
-        this._graph.tip(datum, this._tip);
-      });
-
-      enter.on('mouseout.scola-graph', () => {
-        this._graph.tip(false);
-      });
-    }
+    this._bindTip(enter);
 
     const minimize = this
       ._exit(enter.transition(), this);
 
-    const position = minimize
+    const move = minimize
       .transition()
       .duration(0)
-      .attr('x', (datum) => this._x.get(datum))
-      .attr('width', this._x.scale().bandwidth())
-      .attr('y', (datum) => {
-        const barY = this._y.get(datum);
-        return barY === height ? barY - 3 : barY;
-      })
-      .attr('height', (datum) => {
-        const barHeight = height - this._y.get(datum);
-        return barHeight === 0 ? 3 : barHeight;
-      });
+      .attr('x', (d) => this._attrX(d, keys))
+      .attr('y', (d) => this._attrY(d))
+      .attr('width', () => this._attrWidth(keys))
+      .attr('height', (d) => this._attrHeight(d));
 
-    this._enter(position.transition(), this);
+    this._enter(move.transition(), this);
+  }
+
+  _attrX(datum, keys = null) {
+    if (keys === null) {
+      return this._x.get(datum);
+    }
+
+    return this._group(datum.key);
+  }
+
+  _attrY(datum) {
+    const barY = this._y.get(datum);
+    return barY === this._height ? barY - 3 : barY;
+  }
+
+  _attrWidth(keys = null) {
+    if (keys === null) {
+      return this._x.scale().bandwidth();
+    }
+
+    return this._group.bandwidth();
+  }
+
+  _attrHeight(datum) {
+    const barHeight = this._height - this._y.get(datum);
+    return barHeight === 0 ? 3 : barHeight;
+  }
+
+  _attrTransform(datum) {
+    return 'translate(' + this._attrX(datum) + ',0)';
+  }
+
+  _data(datum, keys = null) {
+    return keys === null ? datum : keys.map((key) => {
+      return Object.assign({}, datum, {
+        key,
+        value: datum[key] || 0
+      });
+    });
   }
 }

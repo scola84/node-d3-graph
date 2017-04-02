@@ -1,126 +1,92 @@
-export default class ScatterPlot {
-  constructor() {
-    this._graph = null;
-    this._x = null;
-    this._y = null;
+import after from 'lodash/after';
+import Plot from './plot';
 
-    this._tip = null;
+export default class ScatterPlot extends Plot {
+  constructor() {
+    super();
+
+    this._root = null;
 
     this._enter = (s) => s.attr('r', 3);
     this._exit = (s) => s.attr('r', 0);
   }
 
   destroy() {
-    if (this._graph === null) {
+    if (this._root === null) {
       return;
     }
 
-    if (this._tip) {
-      this._graph.tip(false);
-    }
+    const circle = this._root
+      .selectAll('circle');
 
-    const scatter = this._graph
-      .group()
-      .selectAll('.scola-scatter');
+    this._unbindTip(circle);
 
     const exit = this
-      ._exit(scatter.transition(), this);
+      ._exit(circle.transition(), this);
 
-    exit.remove();
+    const end = after(circle.size(), () => {
+      this._root.remove();
+      this._root = null;
+    });
+
+    exit
+      .remove()
+      .on('end', end);
   }
 
-  graph(value = null) {
-    if (value === null) {
-      return this._graph;
+  render(data, keys = null) {
+    data = keys === null ? [data] : data;
+
+    if (this._root === null) {
+      this._root = this._graph
+        .group()
+        .append('g')
+        .classed('scola scatter', true);
     }
 
-    this._graph = value;
-    return this;
-  }
+    let groups = this._root
+      .selectAll('g')
+      .data(data);
 
-  x(value = null) {
-    if (value === null) {
-      return this._x;
-    }
+    groups = groups
+      .enter()
+      .append('g')
+      .merge(groups);
 
-    this._x = value;
-    return this;
-  }
+    const circle = groups
+      .selectAll('circle')
+      .data((d, i) => this._data(d, i, keys));
 
-  y(value = null) {
-    if (value === null) {
-      return this._y;
-    }
-
-    this._y = value;
-    return this;
-  }
-
-  tip(value = null) {
-    if (value === null) {
-      return this._tip;
-    }
-
-    this._tip = value;
-    return this;
-  }
-
-  enter(value = null) {
-    if (value === null) {
-      return this._enter;
-    }
-
-    this._enter = value;
-    return this;
-  }
-
-  exit(value = null) {
-    if (value === null) {
-      return this._exit;
-    }
-
-    this._exit = value;
-    return this;
-  }
-
-  render(data, key) {
-    const scatter = this._graph
-      .group()
-      .selectAll('.scola-scatter')
-      .data(data, key);
-
-    const exit = this._exit(scatter
+    const exit = this._exit(circle
       .exit()
       .transition(), this);
 
     exit.remove();
 
-    const enter = scatter
+    const enter = circle
       .enter()
       .append('circle')
-      .merge(scatter)
-      .classed('scola-scatter', true)
-      .style('fill', 'rgba(0, 0, 0, 0)');
+      .style('fill', 'rgba(0, 0, 0, 0)')
+      .merge(circle);
 
-    if (this._tip) {
-      enter.on('mouseover.scola-graph', (datum) => {
-        this._graph.tip(datum, this._tip);
-      });
-
-      enter.on('mouseout.scola-graph', () => {
-        this._graph.tip(false);
-      });
-    }
+    this._bindTip(enter);
 
     const minimize = this
       ._exit(enter.transition(), this);
 
-    const position = minimize
+    const move = minimize
       .transition()
       .duration(0)
       .attr('cx', (datum) => this._x.get(datum))
       .attr('cy', (datum) => this._y.get(datum));
 
-    this._enter(position.transition(), this);
+    this._enter(move.transition(), this);
+  }
+
+  _data(datum, index, keys = null) {
+    return keys === null ? datum : datum.map((sub) => {
+      sub.key = keys[index];
+      return sub;
+    });
   }
 }

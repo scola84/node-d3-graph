@@ -32,9 +32,9 @@ export default class Graph {
     this._right = null;
     this._top = null;
 
-    this._collection = new Set();
+    this._plots = new Set();
     this._data = null;
-    this._key = null;
+    this._keys = null;
 
     this._root = select('body')
       .append('div')
@@ -88,6 +88,15 @@ export default class Graph {
     this._deleteTip();
     this._deleteMessage();
 
+    this.clearAxis();
+    this.clearPlots();
+
+    this._root.dispatch('destroy');
+    this._root.remove();
+    this._root = null;
+  }
+
+  clearAxis() {
     if (this._bottom) {
       this._bottom.destroy();
       this._bottom = null;
@@ -107,16 +116,14 @@ export default class Graph {
       this._top.destroy();
       this._top = null;
     }
+  }
 
-    this._collection.forEach((item) => {
-      item.destroy();
+  clearPlots() {
+    this._plots.forEach((plot) => {
+      plot.destroy();
     });
 
-    this._collection.clear();
-
-    this._root.dispatch('destroy');
-    this._root.remove();
-    this._root = null;
+    this._plots.clear();
   }
 
   root() {
@@ -306,13 +313,13 @@ export default class Graph {
     return this._insertItem(item);
   }
 
-  render(data = null, key = null) {
+  render(data = null, keys = null) {
     if (data === null) {
       data = this._data;
-      key = this._key;
+      keys = this._keys;
 
       this._data = null;
-      this._key = null;
+      this._keys = null;
     }
 
     if (isEqual(data, this._data) === true) {
@@ -320,7 +327,7 @@ export default class Graph {
     }
 
     this._data = data;
-    this._key = key;
+    this._keys = keys;
 
     const width = this.width();
     const height = this.height();
@@ -339,26 +346,34 @@ export default class Graph {
     margin = Object.assign({}, margin);
 
     if (this._bottom) {
+      this._bottom.keys(this._keys);
+      this._bottom.data(this._data);
+
       margin.bottom += this._bottom
-        .data(this._data)
         .height();
     }
 
     if (this._left) {
+      this._left.keys(this._keys);
+      this._left.data(this._data);
+
       margin.left += this._left
-        .data(this._data)
         .width();
     }
 
     if (this._right) {
+      this._right.keys(this._keys);
+      this._right.data(this._data);
+
       margin.right += this._right
-        .data(this._data)
         .width();
     }
 
     if (this._top) {
+      this._top.keys(this._keys);
+      this._top.data(this._data);
+
       margin.top += this._top
-        .data(this._data)
         .height();
     }
 
@@ -407,8 +422,8 @@ export default class Graph {
       this._setSize();
     }
 
-    this._collection.forEach((item) => {
-      item.render(this._data, this._key);
+    this._plots.forEach((item) => {
+      item.render(this._data, this._keys);
     });
 
     return this;
@@ -626,12 +641,12 @@ export default class Graph {
   }
 
   _insertItem(item) {
-    this._collection.add(item.graph(this));
+    this._plots.add(item.graph(this));
     return item;
   }
 
   _deleteItem(item) {
-    this._collection.delete(item);
+    this._plots.delete(item);
     return item;
   }
 

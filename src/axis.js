@@ -3,13 +3,19 @@
 export default class Axis {
   constructor() {
     this._root = null;
+    this._name = null;
+
     this._graph = null;
     this._axis = null;
+
     this._domain = null;
     this._scale = null;
     this._value = null;
+
     this._grid = false;
+
     this._data = [];
+    this._keys = null;
 
     this._enter = (s) => s.style('opacity', 1);
     this._exit = (s) => s;
@@ -23,12 +29,21 @@ export default class Axis {
     const exit = this
       ._exit(this._root.transition(), this);
 
-    this._root = null;
     exit.remove();
+    this._root = null;
   }
 
   root() {
     return this._root;
+  }
+
+  name(value = null) {
+    if (value === null) {
+      return this._name;
+    }
+
+    this._name = value;
+    return this;
   }
 
   graph(value = null) {
@@ -81,6 +96,29 @@ export default class Axis {
     return this;
   }
 
+  data(value = null) {
+    if (value === null) {
+      return this._data;
+    }
+
+    this._data = value;
+
+    const domain = this._domain(this._data,
+      this._keys, this);
+    this._scale.domain(domain);
+
+    return this;
+  }
+
+  keys(value = null) {
+    if (value === null) {
+      return this._keys;
+    }
+
+    this._keys = value;
+    return this;
+  }
+
   grid(value = null) {
     if (value === null) {
       return this._grid;
@@ -108,13 +146,6 @@ export default class Axis {
     return this;
   }
 
-  data(value) {
-    this._data = value;
-    this._scale.domain(this._domain(value, this));
-
-    return this;
-  }
-
   get(datum) {
     return this._value(datum, this._scale);
   }
@@ -131,6 +162,7 @@ export default class Axis {
 
   bottom() {
     this._render(-this._graph.innerHeight());
+    this._root.classed('bottom', true);
 
     if (this._data.length > 0) {
       this._all();
@@ -143,6 +175,7 @@ export default class Axis {
 
   left() {
     this._render(-this._graph.innerWidth());
+    this._root.classed('left', true);
 
     this._all();
     this._vertical();
@@ -153,6 +186,7 @@ export default class Axis {
 
   right() {
     this._render(-this._graph.innerWidth());
+    this._root.classed('right', true);
 
     if (this._data.length > 0) {
       this._all();
@@ -165,6 +199,7 @@ export default class Axis {
 
   top() {
     this._render(-this._graph.innerHeight());
+    this._root.classed('top', true);
 
     this._all();
     this._horizontal();
@@ -181,6 +216,7 @@ export default class Axis {
       this._root = this._graph
         .group()
         .append('g')
+        .classed('scola axis', true)
         .style('opacity', 0);
     }
 
@@ -190,7 +226,7 @@ export default class Axis {
     }
 
     this
-      ._enter(this._root.transition(), this._data, this)
+      ._enter(this._root.transition(), this)
       .call(this._axis);
   }
 

@@ -1,10 +1,11 @@
 import { line } from 'd3';
+import after from 'lodash/after';
+import Plot from './plot';
 
-export default class LinePlot {
+export default class LinePlot extends Plot {
   constructor() {
-    this._graph = null;
-    this._x = null;
-    this._y = null;
+    super();
+
     this._root = null;
 
     this._factory = line()
@@ -20,84 +21,60 @@ export default class LinePlot {
       return;
     }
 
+    const path = this._root
+      .selectAll('path');
+
     const exit = this
-      ._exit(this._root.transition(), this);
+      ._exit(path.transition(), this);
 
-    this._root = null;
-    exit.remove();
-  }
+    const end = after(path.size(), () => {
+      this._root.remove();
+      this._root = null;
+    });
 
-  root() {
-    return this._root;
+    exit
+      .remove()
+      .on('end', end);
   }
 
   factory() {
     return this._factory;
   }
 
-  graph(value) {
-    if (value === null) {
-      return this._graph;
-    }
+  render(data, keys = null) {
+    data = keys === null ? [data] : data;
 
-    this._graph = value;
-    return this;
-  }
-
-  x(value) {
-    if (value === null) {
-      return this._x;
-    }
-
-    this._x = value;
-    return this;
-  }
-
-  y(value) {
-    if (value === null) {
-      return this._y;
-    }
-
-    this._y = value;
-    return this;
-  }
-
-  enter(value = null) {
-    if (value === null) {
-      return this._enter;
-    }
-
-    this._enter = value;
-    return this;
-  }
-
-  exit(value = null) {
-    if (value === null) {
-      return this._exit;
-    }
-
-    this._exit = value;
-    return this;
-  }
-
-  render(data) {
     if (this._root === null) {
       this._root = this._graph
         .group()
-        .append('path')
-        .classed('scola-line', true)
-        .style('fill', 'none');
+        .append('g')
+        .classed('scola line', true);
     }
 
-    const exit = this
-      ._exit(this._root.transition(), this);
+    const path = this._root
+      .selectAll('path')
+      .data(data);
 
-    const enter = exit
+    const exit = this._exit(path
+      .exit()
+      .transition(), this);
+
+    exit.remove();
+
+    const enter = path
+      .enter()
+      .append('path')
+      .style('fill', 'none')
+      .merge(path);
+
+    const minimize = this
+      ._exit(enter.transition(), this);
+
+    const move = minimize
       .transition()
       .duration(0)
-      .attr('d', this._factory(data))
-      .transition();
+      .attr('d', (d) => this._factory(d));
 
-    this._enter(enter, this);
+    this._enter(move.transition(), this);
   }
 }
