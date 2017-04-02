@@ -41,7 +41,7 @@ export default class Graph {
       .remove()
       .classed('scola graph', true)
       .styles({
-        'padding-bottom': '3em'
+        'margin-bottom': '2em'
       });
 
     this._body = this._root
@@ -469,8 +469,8 @@ export default class Graph {
       .media(`(min-width: ${width})`)
       .call(() => { this._inset = true; })
       .styles({
-        'padding-left': '1em',
-        'padding-right': '1em'
+        'margin-left': '1em',
+        'margin-right': '1em'
       })
       .start();
 
