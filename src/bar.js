@@ -70,8 +70,8 @@ export default class BarPlot extends Plot {
       groups = groups
         .enter()
         .append('g')
-        .attr('transform', (d) => this._attrTransform(d))
-        .merge(groups);
+        .merge(groups)
+        .attr('transform', (d) => this._attrTransform(d));
 
       data = (d) => this._data(d, keys);
     }

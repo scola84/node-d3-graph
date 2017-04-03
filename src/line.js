@@ -64,8 +64,8 @@ export default class LinePlot extends Plot {
     const enter = path
       .enter()
       .append('path')
-      .style('fill', 'none')
-      .merge(path);
+      .merge(path)
+      .style('fill', 'none');
 
     const minimize = this
       ._exit(enter.transition(), this);

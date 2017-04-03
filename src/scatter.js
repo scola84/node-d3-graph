@@ -66,8 +66,8 @@ export default class ScatterPlot extends Plot {
     const enter = circle
       .enter()
       .append('circle')
-      .style('fill', 'rgba(0, 0, 0, 0)')
-      .merge(circle);
+      .merge(circle)
+      .style('fill', 'rgba(0, 0, 0, 0)');
 
     this._bindTip(enter);
 

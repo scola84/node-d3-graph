@@ -33,6 +33,7 @@ export default class Graph {
     this._top = null;
 
     this._plots = new Set();
+
     this._data = null;
     this._keys = null;
 
@@ -54,13 +55,16 @@ export default class Graph {
         'border-width': '1px 0',
         'display': 'flex',
         'flex-direction': 'column',
-        'overflow': 'hidden'
+        'height': '100%',
+        'overflow': 'hidden',
+        'width': '100%'
       });
 
     this._outer = this._body
       .append('div')
       .classed('scola svg', true)
       .styles({
+        'flex': 1,
         'order': 2,
         'position': 'relative'
       });
@@ -94,36 +98,6 @@ export default class Graph {
     this._root.dispatch('destroy');
     this._root.remove();
     this._root = null;
-  }
-
-  clearAxis() {
-    if (this._bottom) {
-      this._bottom.destroy();
-      this._bottom = null;
-    }
-
-    if (this._left) {
-      this._left.destroy();
-      this._left = null;
-    }
-
-    if (this._right) {
-      this._right.destroy();
-      this._right = null;
-    }
-
-    if (this._top) {
-      this._top.destroy();
-      this._top = null;
-    }
-  }
-
-  clearPlots() {
-    this._plots.forEach((plot) => {
-      plot.destroy();
-    });
-
-    this._plots.clear();
   }
 
   root() {
@@ -170,6 +144,19 @@ export default class Graph {
     }
 
     this._svg.style('width', value + 'px');
+    return this;
+  }
+
+  maximize(value = null) {
+    if (value === null) {
+      return this._maximized;
+    }
+
+    this._maximized = value;
+
+    this._root.classed('maximized', value);
+    this._resize();
+
     return this;
   }
 
@@ -313,21 +300,48 @@ export default class Graph {
     return this._insertItem(item);
   }
 
+  clearAxis() {
+    if (this._bottom) {
+      this._bottom.destroy();
+      this._bottom = null;
+    }
+
+    if (this._left) {
+      this._left.destroy();
+      this._left = null;
+    }
+
+    if (this._right) {
+      this._right.destroy();
+      this._right = null;
+    }
+
+    if (this._top) {
+      this._top.destroy();
+      this._top = null;
+    }
+  }
+
+  clearPlots() {
+    this._plots.forEach((plot) => {
+      plot.destroy();
+    });
+
+    this._plots.clear();
+  }
+
   render(data = null, keys = null) {
     if (data === null) {
       data = this._data;
       keys = this._keys;
+    } else {
+      if (isEqual(data, this._data) === true) {
+        return this;
+      }
 
-      this._data = null;
-      this._keys = null;
+      this._data = data;
+      this._keys = keys;
     }
-
-    if (isEqual(data, this._data) === true) {
-      return this;
-    }
-
-    this._data = data;
-    this._keys = keys;
 
     const width = this.width();
     const height = this.height();
@@ -445,7 +459,7 @@ export default class Graph {
   _bindEqualizer() {
     if (this._equalizer) {
       this._equalizer.root().on('resize.scola-graph', () => {
-        this._equalize();
+        this._resize();
       });
     }
   }
@@ -648,26 +662,6 @@ export default class Graph {
       .attr('transform', `translate(${left},${top})`);
   }
 
-  _equalize() {
-    const width = this.width();
-
-    if (Number.isNaN(width) === true) {
-      return this;
-    }
-
-    const oldHeight = this.height();
-    const newHeight = width * this._ratio;
-
-    if (oldHeight === newHeight) {
-      return this;
-    }
-
-    this.height(newHeight);
-    this.render();
-
-    return this;
-  }
-
   _setSize() {
     this._group
       .selectAll('text')
@@ -675,5 +669,53 @@ export default class Graph {
         return this._inset === true ?
           '0.9em' : '0.75em';
       });
+  }
+
+  _resize() {
+    if (this._maximized === true) {
+      this._maximize();
+    } else {
+      this._equalize();
+    }
+  }
+
+  _maximize() {
+    const oldHeight = parseFloat(this._svg.style('height'));
+    this._svg.style('height', null);
+    const newHeight = parseFloat(this._svg.style('height'));
+
+    if (oldHeight === newHeight) {
+      return;
+    }
+
+    this._svg
+      .styles({
+        'height': newHeight + 'px',
+        'position': 'absolute'
+      });
+
+    this.render();
+  }
+
+  _equalize() {
+    const width = this.width();
+
+    if (Number.isNaN(width) === true) {
+      return;
+    }
+
+    const oldHeight = this.height();
+    const newHeight = width * this._ratio;
+
+    if (oldHeight === newHeight) {
+      return;
+    }
+
+    this._svg.styles({
+      'height': newHeight + 'px',
+      'position': null
+    });
+
+    this.render();
   }
 }
