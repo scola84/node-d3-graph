@@ -140,8 +140,7 @@ export default class BarPlot extends Plot {
   _data(datum, keys = null) {
     return keys === null ? datum : keys.map((key) => {
       return Object.assign({}, datum, {
-        key,
-        value: datum[key] || 0
+        key
       });
     });
   }

@@ -346,35 +346,31 @@ export default class Graph {
     margin = Object.assign({}, margin);
 
     if (this._bottom) {
-      this._bottom.keys(this._keys);
-      this._bottom.data(this._data);
-
       margin.bottom += this._bottom
+        .prepare(this._data, this._keys)
         .height();
     }
 
     if (this._left) {
-      this._left.keys(this._keys);
-      this._left.data(this._data);
-
       margin.left += this._left
+        .prepare(this._data, this._keys)
         .width();
     }
 
     if (this._right) {
-      this._right.keys(this._keys);
-      this._right.data(this._data);
-
       margin.right += this._right
+        .prepare(this._data, this._keys)
         .width();
     }
 
     if (this._top) {
-      this._top.keys(this._keys);
-      this._top.data(this._data);
-
       margin.top += this._top
+        .prepare(this._data, this._keys)
         .height();
+    }
+
+    if (this._data.length === 0) {
+      return this;
     }
 
     this._innerHeight = height -
@@ -417,10 +413,8 @@ export default class Graph {
       this._top.top();
     }
 
-    if (this._data.length > 0) {
-      this._setPosition(margin.left, margin.top);
-      this._setSize();
-    }
+    this._setPosition(margin.left, margin.top);
+    this._setSize();
 
     this._plots.forEach((item) => {
       item.render(this._data, this._keys);
@@ -469,8 +463,8 @@ export default class Graph {
       .media(`(min-width: ${width})`)
       .call(() => { this._inset = true; })
       .styles({
-        'margin-left': '1em',
-        'margin-right': '1em'
+        'padding-left': '1em',
+        'padding-right': '1em'
       })
       .start();
 
@@ -557,8 +551,7 @@ export default class Graph {
       .styles({
         'background': '#000',
         'color': '#FFF',
-        'line-height': '1.65em',
-        'padding': '0.25em 0.5em',
+        'padding': '0.5em',
         'position': 'absolute',
         'white-space': 'nowrap',
         'border-radius': '0.3em'

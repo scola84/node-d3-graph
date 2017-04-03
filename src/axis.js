@@ -14,9 +14,6 @@ export default class Axis {
 
     this._grid = false;
 
-    this._data = [];
-    this._keys = null;
-
     this._enter = (s) => s.style('opacity', 1);
     this._exit = (s) => s;
   }
@@ -96,29 +93,6 @@ export default class Axis {
     return this;
   }
 
-  data(value = null) {
-    if (value === null) {
-      return this._data;
-    }
-
-    this._data = value;
-
-    const domain = this._domain(this._data,
-      this._keys, this);
-    this._scale.domain(domain);
-
-    return this;
-  }
-
-  keys(value = null) {
-    if (value === null) {
-      return this._keys;
-    }
-
-    this._keys = value;
-    return this;
-  }
-
   grid(value = null) {
     if (value === null) {
       return this._grid;
@@ -150,6 +124,26 @@ export default class Axis {
     return this._value(datum, this._scale);
   }
 
+  prepare(data, keys) {
+    const domain = this._domain(data, keys, this);
+    this._scale.domain(domain);
+
+    if (data.length === 0) {
+      this.destroy();
+      return this;
+    }
+
+    if (this._root === null) {
+      this._root = this._graph
+        .group()
+        .append('g')
+        .classed('scola axis', true)
+        .style('opacity', 0);
+    }
+
+    return this;
+  }
+
   height() {
     return this._axis.tickPadding() +
       this._size('height');
@@ -164,11 +158,9 @@ export default class Axis {
     this._render(-this._graph.innerHeight());
     this._root.classed('bottom', true);
 
-    if (this._data.length > 0) {
-      this._all();
-      this._horizontal();
-      this._bottom();
-    }
+    this._all();
+    this._horizontal();
+    this._bottom();
 
     return this;
   }
@@ -188,11 +180,9 @@ export default class Axis {
     this._render(-this._graph.innerWidth());
     this._root.classed('right', true);
 
-    if (this._data.length > 0) {
-      this._all();
-      this._vertical();
-      this._right();
-    }
+    this._all();
+    this._vertical();
+    this._right();
 
     return this;
   }
@@ -210,19 +200,6 @@ export default class Axis {
   _render(gridSize) {
     if (this._grid === true) {
       this._axis.tickSizeInner(gridSize);
-    }
-
-    if (this._root === null) {
-      this._root = this._graph
-        .group()
-        .append('g')
-        .classed('scola axis', true)
-        .style('opacity', 0);
-    }
-
-    if (this._data.length === 0) {
-      this._exit(this._root.transition(), this);
-      return;
     }
 
     this
