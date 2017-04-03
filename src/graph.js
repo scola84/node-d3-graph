@@ -330,19 +330,15 @@ export default class Graph {
     this._plots.clear();
   }
 
-  render(data = null, keys = null) {
-    if (data === null) {
-      data = this._data;
-      keys = this._keys;
-    } else {
-      if (isEqual(data, this._data) === true) {
-        return this;
-      }
+  render(data, keys) {
+    this._data = data;
+    this._keys = keys;
 
-      this._data = data;
-      this._keys = keys;
-    }
+    this._render();
+    return this;
+  }
 
+  _render() {
     const width = this.width();
     const height = this.height();
 
@@ -383,7 +379,11 @@ export default class Graph {
         .height();
     }
 
-    if (this._data.length === 0) {
+    const cancel =
+      this._data === null ||
+      this._data.length === 0;
+
+    if (cancel === true) {
       return this;
     }
 
@@ -694,7 +694,7 @@ export default class Graph {
         'position': 'absolute'
       });
 
-    this.render();
+    this._render();
   }
 
   _equalize() {
@@ -716,6 +716,6 @@ export default class Graph {
       'position': null
     });
 
-    this.render();
+    this._render();
   }
 }
