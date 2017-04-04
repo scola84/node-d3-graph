@@ -1,7 +1,6 @@
 /* eslint prefer-reflect: "off" */
 
 import { event, select } from 'd3';
-import isEqual from 'lodash-es/isEqual';
 import { controlBar } from '@scola/d3-control';
 
 export default class Graph {
@@ -25,7 +24,6 @@ export default class Graph {
     this._equalizer = null;
 
     this._message = null;
-    this._timeout = null;
 
     this._bottom = null;
     this._left = null;
@@ -34,7 +32,7 @@ export default class Graph {
 
     this._plots = new Set();
 
-    this._data = null;
+    this._data = [];
     this._keys = null;
 
     this._root = select('body')
@@ -118,6 +116,10 @@ export default class Graph {
 
   innerWidth() {
     return this._innerWidth;
+  }
+
+  renderable() {
+    return Number.isNaN(this.width()) === false;
   }
 
   ratio(value = null) {
@@ -232,22 +234,16 @@ export default class Graph {
     return this;
   }
 
-  message(value = null, delay = null) {
+  message(value = null) {
     if (value === null) {
       return this._message;
     }
-
-    clearTimeout(this._timeout);
 
     if (value === false) {
       return this._deleteMessage();
     }
 
-    if (delay !== null) {
-      return this._delayMessage(value, delay);
-    }
-
-    this._data = null;
+    this._data = [];
 
     if (this._message) {
       return this._updateMessage(value);
@@ -631,18 +627,6 @@ export default class Graph {
       this._message.remove();
       this._message = null;
     }
-
-    return this;
-  }
-
-  _delayMessage(text, delay) {
-    delay = delay === true ? 250 : delay;
-
-    clearTimeout(this._timeout);
-
-    this._timeout = setTimeout(() => {
-      this.message(text);
-    }, delay);
 
     return this;
   }
