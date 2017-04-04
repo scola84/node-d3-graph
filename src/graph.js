@@ -110,6 +110,10 @@ export default class Graph {
     return this._group;
   }
 
+  data() {
+    return this._data;
+  }
+
   innerHeight() {
     return this._innerHeight;
   }
