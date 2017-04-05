@@ -55,7 +55,9 @@ export default class ScatterPlot extends Plot {
 
     const circle = groups
       .selectAll('circle')
-      .data((d, i) => this._data(d, i, keys));
+      .data((datum) => {
+        return Object.values(datum);
+      });
 
     const exit = this._exit(circle
       .exit()
@@ -66,8 +68,7 @@ export default class ScatterPlot extends Plot {
     const enter = circle
       .enter()
       .append('circle')
-      .merge(circle)
-      .style('fill', 'rgba(0, 0, 0, 0)');
+      .merge(circle);
 
     this._bindTip(enter);
 
@@ -78,15 +79,12 @@ export default class ScatterPlot extends Plot {
       .transition()
       .duration(0)
       .attr('cx', (datum) => this._x.get(datum))
-      .attr('cy', (datum) => this._y.get(datum));
+      .attr('cy', (datum) => this._y.get(datum))
+      .styles({
+        'fill': 'rgba(0, 0, 0, 0)',
+        'stroke': '#007AFF'
+      });
 
     this._enter(move.transition(), this);
-  }
-
-  _data(datum, index, keys = null) {
-    return keys === null ? datum : datum.map((sub) => {
-      sub.key = keys[index];
-      return sub;
-    });
   }
 }

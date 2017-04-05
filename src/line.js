@@ -64,8 +64,7 @@ export default class LinePlot extends Plot {
     const enter = path
       .enter()
       .append('path')
-      .merge(path)
-      .style('fill', 'none');
+      .merge(path);
 
     const minimize = this
       ._exit(enter.transition(), this);
@@ -73,7 +72,13 @@ export default class LinePlot extends Plot {
     const move = minimize
       .transition()
       .duration(0)
-      .attr('d', (d) => this._factory(d));
+      .attr('d', (datum) => {
+        return this._factory(Object.values(datum));
+      })
+      .styles({
+        'fill': 'none',
+        'stroke': '#007AFF'
+      });
 
     this._enter(move.transition(), this);
   }

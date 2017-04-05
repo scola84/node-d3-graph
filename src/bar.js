@@ -56,29 +56,16 @@ export default class BarPlot extends Plot {
     this._height = this._graph
       .innerHeight();
 
-    let groups = this._root;
-
-    if (keys !== null) {
-      this._group
-        .domain(keys)
-        .range([0, this._attrWidth()]);
-
-      groups = groups
-        .selectAll('g')
-        .data(data);
-
-      groups = groups
-        .enter()
-        .append('g')
-        .merge(groups)
-        .attr('transform', (d) => this._attrTransform(d));
-
-      data = (d) => this._data(d, keys);
-    }
+    const grouped = keys !== null;
+    const groups = grouped === true ?
+      this._grouped(data, keys) :
+      this._ungrouped(data);
 
     const bar = groups
       .selectAll('rect')
-      .data(data);
+      .data((datum) => {
+        return datum;
+      });
 
     const exit = this._exit(bar
       .exit()
@@ -99,20 +86,73 @@ export default class BarPlot extends Plot {
     const move = minimize
       .transition()
       .duration(0)
-      .attr('x', (d) => this._attrX(d, keys))
-      .attr('y', (d) => this._attrY(d))
-      .attr('width', () => this._attrWidth(keys))
-      .attr('height', (d) => this._attrHeight(d));
+      .attr('x', (datum, index) => {
+        return this._attrX(datum, index, grouped);
+      })
+      .attr('y', (datum) => {
+        return this._attrY(datum);
+      })
+      .attr('width', () => {
+        return this._attrWidth(grouped);
+      })
+      .attr('height', (datum) => {
+        return this._attrHeight(datum);
+      })
+      .style('fill', '#007AFF');
 
     this._enter(move.transition(), this);
   }
 
-  _attrX(datum, keys = null) {
-    if (keys === null) {
+  _grouped(data, keys) {
+    const all = [];
+
+    data.forEach((datum, datumIndex) => {
+      keys.forEach((key, keyIndex) => {
+        all[keyIndex] = all[keyIndex] || [];
+        all[keyIndex][datumIndex] = datum[keyIndex];
+      });
+    });
+
+    this._group
+      .domain(data.map((datum, index) => {
+        return index;
+      }))
+      .range([0, this._attrWidth()]);
+
+    let groups = this._root
+      .selectAll('g')
+      .data(all);
+
+    groups = groups
+      .enter()
+      .append('g')
+      .merge(groups)
+      .attr('transform', (datum) => {
+        return 'translate(' + this._attrX(datum[0]) + ',0)';
+      });
+
+    return groups;
+  }
+
+  _ungrouped(data) {
+    let groups = this._root
+      .selectAll('g')
+      .data([data]);
+
+    groups = groups
+      .enter()
+      .append('g')
+      .merge(groups);
+
+    return groups;
+  }
+
+  _attrX(datum, index, grouped = false) {
+    if (grouped === false) {
       return this._x.get(datum);
     }
 
-    return this._group(datum.key);
+    return this._group(index);
   }
 
   _attrY(datum) {
@@ -120,8 +160,8 @@ export default class BarPlot extends Plot {
     return barY === this._height ? barY - 3 : barY;
   }
 
-  _attrWidth(keys = null) {
-    if (keys === null) {
+  _attrWidth(grouped = false) {
+    if (grouped === false) {
       return this._x.scale().bandwidth();
     }
 
@@ -131,17 +171,5 @@ export default class BarPlot extends Plot {
   _attrHeight(datum) {
     const barHeight = this._height - this._y.get(datum);
     return barHeight === 0 ? 3 : barHeight;
-  }
-
-  _attrTransform(datum) {
-    return 'translate(' + this._attrX(datum) + ',0)';
-  }
-
-  _data(datum, keys = null) {
-    return keys === null ? datum : keys.map((key) => {
-      return Object.assign({}, datum, {
-        key
-      });
-    });
   }
 }

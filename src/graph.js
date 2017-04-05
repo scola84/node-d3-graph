@@ -379,11 +379,7 @@ export default class Graph {
         .height();
     }
 
-    const cancel =
-      this._data === null ||
-      this._data.length === 0;
-
-    if (cancel === true) {
+    if (this._data.length === 0) {
       return this;
     }
 
