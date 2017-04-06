@@ -128,11 +128,6 @@ export default class Axis {
     const domain = this._domain(data, keys, this);
     this._scale.domain(domain);
 
-    if (data.length === 0) {
-      this.destroy();
-      return this;
-    }
-
     if (this._root === null) {
       this._root = this._graph
         .group()

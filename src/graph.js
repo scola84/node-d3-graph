@@ -1,6 +1,7 @@
 /* eslint prefer-reflect: "off" */
 
 import { event, select } from 'd3';
+import flatten from 'lodash-es/flatten';
 import { controlBar } from '@scola/d3-control';
 
 export default class Graph {
@@ -379,7 +380,7 @@ export default class Graph {
         .height();
     }
 
-    if (this._data.length === 0) {
+    if (flatten(this._data).length === 0) {
       return this;
     }
 
