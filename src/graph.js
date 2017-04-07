@@ -49,9 +49,8 @@ export default class Graph {
       .classed('scola body', true)
       .styles({
         'background': '#FFF',
-        'border-color': '#CCC',
-        'border-style': 'solid',
-        'border-width': '1px 0',
+        'border-bottom': '1px solid #CCC',
+        'border-top': '1px solid #CCC',
         'display': 'flex',
         'flex-direction': 'column',
         'height': '100%',
@@ -160,8 +159,9 @@ export default class Graph {
     }
 
     this._maximized = value;
-
     this._root.classed('maximized', value);
+
+    this._move(value);
     this._resize();
 
     return this;
@@ -482,8 +482,9 @@ export default class Graph {
     this._bodyMedia = this._body
       .media(`(min-width: ${width})`)
       .styles({
+        'border-bottom': 'none',
         'border-radius': '0.5em',
-        'border-style': 'none',
+        'border-top': 'none',
         'overflow': 'hidden'
       })
       .start();
@@ -702,5 +703,22 @@ export default class Graph {
     });
 
     this._render();
+  }
+
+  _move(maximize) {
+    if (maximize === true) {
+      this._parent = this._root.node().parentNode;
+      this._sibling = this._root.node().nextSibling;
+      document.body.appendChild(this._root.node());
+    } else {
+      if (this._sibling) {
+        this._parent.insertBefore(this._root.node(), this._sibling);
+      } else {
+        this._parent.appendChild(this._root.node());
+      }
+
+      this._parent = null;
+      this._sibling = null;
+    }
   }
 }
