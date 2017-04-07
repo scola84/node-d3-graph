@@ -668,7 +668,16 @@ export default class Graph {
   _maximize() {
     const oldHeight = parseFloat(this._svg.style('height'));
     this._svg.style('height', null);
-    const newHeight = parseFloat(this._svg.style('height'));
+
+    let newHeight = parseFloat(this._root.style('height'));
+
+    if (this._header) {
+      newHeight -= parseFloat(this._header.root().style('height'));
+    }
+
+    if (this._footer) {
+      newHeight -= parseFloat(this._footer.root().style('height'));
+    }
 
     if (oldHeight === newHeight) {
       return;
