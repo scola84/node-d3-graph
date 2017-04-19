@@ -1,4 +1,4 @@
-import after from 'lodash/after';
+import after from 'lodash-es/after';
 import Plot from './plot';
 
 export default class ScatterPlot extends Plot {
