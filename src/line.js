@@ -1,5 +1,5 @@
 import { line } from 'd3';
-import after from 'lodash/after';
+import after from 'lodash-es/after';
 import Plot from './plot';
 
 export default class LinePlot extends Plot {
