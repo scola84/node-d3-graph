@@ -62,8 +62,7 @@ export default class Graph {
       .append('div')
       .classed('scola svg', true)
       .styles({
-        'flex': 1,
-        'order': 2,
+        'flex': 'auto',
         'position': 'relative'
       });
 
@@ -512,8 +511,7 @@ export default class Graph {
     this._header.root()
       .classed('scola header', true)
       .styles({
-        'border-bottom': '1px solid #CCC',
-        'order': 1
+        'border-bottom': '1px solid #CCC'
       });
 
     this._body.node()
@@ -537,8 +535,7 @@ export default class Graph {
     this._footer.root()
       .classed('scola footer', true)
       .styles({
-        'border-top': '1px solid #CCC',
-        'order': 3
+        'border-top': '1px solid #CCC'
       });
 
     this._body
