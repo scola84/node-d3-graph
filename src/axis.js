@@ -227,9 +227,17 @@ export default class Axis {
       .style('font-size', '0.9em')
       .text(longest);
 
-    const size = node.node().getBBox()[attr];
-    node.remove();
+    let size = null;
 
+    try {
+      size = node
+        .node()
+        .getBBox()[attr];
+    } catch (e) {
+      size = 0;
+    }
+
+    node.remove();
     return size;
   }
 
