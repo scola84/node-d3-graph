@@ -455,7 +455,7 @@ export default class Graph {
   _bindEqualizer() {
     if (this._equalizer) {
       this._equalizer.root().on('resize.scola-graph', () => {
-        this._resize();
+        this._resize(event.detail);
       });
     }
   }
@@ -654,15 +654,15 @@ export default class Graph {
       });
   }
 
-  _resize() {
+  _resize(changed) {
     if (this._maximized === true) {
-      this._maximize();
+      this._maximize(changed);
     } else {
-      this._equalize();
+      this._equalize(changed);
     }
   }
 
-  _maximize() {
+  _maximize(changed = true) {
     const oldHeight = parseFloat(this._svg.style('height'));
     this._svg.style('height', null);
 
@@ -676,20 +676,21 @@ export default class Graph {
       newHeight -= parseFloat(this._footer.root().style('height'));
     }
 
-    if (oldHeight === newHeight) {
-      return;
-    }
+    const set =
+      changed === true &&
+      oldHeight !== newHeight;
 
-    this._svg
-      .styles({
+    this._svg.styles(() => {
+      return set === true ? {
         'height': newHeight + 'px',
         'position': 'absolute'
-      });
+      } : {};
+    });
 
     this._render();
   }
 
-  _equalize() {
+  _equalize(changed = true) {
     const width = this.width();
 
     if (Number.isNaN(width) === true) {
@@ -699,13 +700,15 @@ export default class Graph {
     const oldHeight = this.height();
     const newHeight = width * this._ratio;
 
-    if (oldHeight === newHeight) {
-      return;
-    }
+    const set =
+      changed === true &&
+      oldHeight !== newHeight;
 
-    this._svg.styles({
-      'height': newHeight + 'px',
-      'position': null
+    this._svg.styles(() => {
+      return set === true ? {
+        'height': newHeight + 'px',
+        'position': null
+      } : {};
     });
 
     this._render();
