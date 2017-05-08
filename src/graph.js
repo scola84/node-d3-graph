@@ -23,6 +23,7 @@ export default class Graph {
     this._footer = null;
     this._tip = null;
     this._equalizer = null;
+    this._maximized = false;
 
     this._message = null;
 
@@ -654,7 +655,35 @@ export default class Graph {
       });
   }
 
+  _setRoot() {
+    this._root.styles(() => {
+      if (this._maximized === false) {
+        return {
+          height: '100%',
+          width: '100%',
+          'margin-top': null
+        };
+      }
+
+      const transform = this._root.style('transform');
+      const height = select(document.body).style('height');
+      const width = select(document.body).style('width');
+
+      return transform === 'none' ? {
+        height,
+        width,
+        'margin-top': null
+      } : {
+        height: width,
+        width: height,
+        'margin-top': height
+      };
+    });
+  }
+
   _resize(changed) {
+    this._setRoot();
+
     if (this._maximized === true) {
       this._maximize(changed);
     } else {
