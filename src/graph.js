@@ -136,7 +136,7 @@ export default class Graph {
 
   height(value = null) {
     if (value === null) {
-      return this._parseHeight();
+      return this._svg.height();
     }
 
     this._svg.style('height', value + 'px');
@@ -145,7 +145,7 @@ export default class Graph {
 
   width(value = null) {
     if (value === null) {
-      return this._parseWidth();
+      return this._svg.width();
     }
 
     this._svg.style('width', value + 'px');
@@ -640,20 +640,6 @@ export default class Graph {
     return item;
   }
 
-  _parseHeight() {
-    const height = this._svg.style('height');
-
-    return height.match('px') === null ?
-      NaN : parseFloat(height);
-  }
-
-  _parseWidth() {
-    const width = this._svg.style('width');
-
-    return width.match('px') === null ?
-      NaN : parseFloat(width);
-  }
-
   _setPosition(left, top) {
     this._group
       .attr('transform', `translate(${left},${top})`);
@@ -680,8 +666,8 @@ export default class Graph {
       }
 
       const transform = this._root.style('transform');
-      const height = select(document.body).style('height');
-      const width = select(document.body).style('width');
+      const height = select(document.body).height();
+      const width = select(document.body).width();
 
       return transform === 'none' ? {
         height,
@@ -712,17 +698,17 @@ export default class Graph {
   }
 
   _maximize(changed = true) {
-    const oldHeight = parseFloat(this._svg.style('height'));
+    const oldHeight = this._svg.height();
     this._svg.style('height', null);
 
-    let newHeight = parseFloat(this._root.style('height'));
+    let newHeight = this._root.height();
 
     if (this._header) {
-      newHeight -= parseFloat(this._header.root().style('height'));
+      newHeight -= this._header.root().height();
     }
 
     if (this._footer) {
-      newHeight -= parseFloat(this._footer.root().style('height'));
+      newHeight -= this._footer.root().height();
     }
 
     const set =
