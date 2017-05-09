@@ -55,7 +55,6 @@ export default class Graph {
         'display': 'flex',
         'flex-direction': 'column',
         'height': '100%',
-        'overflow': 'hidden',
         'width': '100%'
       });
 
@@ -137,7 +136,7 @@ export default class Graph {
 
   height(value = null) {
     if (value === null) {
-      return parseFloat(this._svg.style('height'));
+      return this._parseHeight();
     }
 
     this._svg.style('height', value + 'px');
@@ -146,7 +145,7 @@ export default class Graph {
 
   width(value = null) {
     if (value === null) {
-      return parseFloat(this._svg.style('width'));
+      return this._parseWidth();
     }
 
     this._svg.style('width', value + 'px');
@@ -641,6 +640,20 @@ export default class Graph {
     return item;
   }
 
+  _parseHeight() {
+    const height = this._svg.style('height');
+
+    return height.match('px') === null ?
+      NaN : parseFloat(height);
+  }
+
+  _parseWidth() {
+    const width = this._svg.style('width');
+
+    return width.match('px') === null ?
+      NaN : parseFloat(width);
+  }
+
   _setPosition(left, top) {
     this._group
       .attr('transform', `translate(${left},${top})`);
@@ -659,9 +672,10 @@ export default class Graph {
     this._root.styles(() => {
       if (this._maximized === false) {
         return {
-          height: '100%',
-          width: '100%',
-          'margin-top': null
+          'height': '100%',
+          'margin-top': null,
+          'position': null,
+          'width': '100%'
         };
       }
 
@@ -671,17 +685,23 @@ export default class Graph {
 
       return transform === 'none' ? {
         height,
-        width,
-        'margin-top': null
+        'margin-top': null,
+        'position': 'absolute',
+        width
       } : {
-        height: width,
-        width: height,
-        'margin-top': height
+        'height': width,
+        'margin-top': height,
+        'position': 'absolute',
+        'width': height
       };
     });
   }
 
   _resize(changed) {
+    if (this.renderable() === false) {
+      return;
+    }
+
     this._setRoot();
 
     if (this._maximized === true) {
