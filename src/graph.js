@@ -122,7 +122,7 @@ export default class Graph {
   }
 
   renderable() {
-    return Number.isNaN(this.width()) === false;
+    return this.width() > 0;
   }
 
   ratio(value = null) {
