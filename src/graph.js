@@ -666,8 +666,8 @@ export default class Graph {
       }
 
       const transform = this._root.style('transform');
-      const height = select(document.body).height();
-      const width = select(document.body).width();
+      const height = select(document.body).style('height');
+      const width = select(document.body).style('width');
 
       return transform === 'none' ? {
         height,
