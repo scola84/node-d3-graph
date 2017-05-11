@@ -71,6 +71,9 @@ export default class Graph {
       .attrs({
         'width': '100%',
         'height': '100%'
+      })
+      .styles({
+        'display': 'block'
       });
 
     this._group = this._svg
@@ -136,7 +139,7 @@ export default class Graph {
 
   height(value = null) {
     if (value === null) {
-      return this._svg.height();
+      return this._svg.height(true);
     }
 
     this._svg.style('height', value + 'px');
@@ -145,7 +148,7 @@ export default class Graph {
 
   width(value = null) {
     if (value === null) {
-      return this._svg.width();
+      return this._svg.width(true);
     }
 
     this._svg.style('width', value + 'px');
@@ -698,17 +701,17 @@ export default class Graph {
   }
 
   _maximize(changed = true) {
-    const oldHeight = this._svg.height();
+    const oldHeight = this._svg.height(true);
     this._svg.style('height', null);
 
-    let newHeight = this._root.height();
+    let newHeight = this._root.height(true);
 
     if (this._header) {
-      newHeight -= this._header.root().height();
+      newHeight -= this._header.root().height(true);
     }
 
     if (this._footer) {
-      newHeight -= this._footer.root().height();
+      newHeight -= this._footer.root().height(true);
     }
 
     const set =
