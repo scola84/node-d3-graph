@@ -160,9 +160,13 @@ export default class Graph {
     this._maximized = value;
     this._root.classed('maximized', value);
 
-    this._move(value);
-    this._resize();
+    if (this._equalizer) {
+      this._equalizer
+        .root()
+        .classed('maximized', value);
+    }
 
+    this._resize();
     return this;
   }
 
@@ -663,7 +667,6 @@ export default class Graph {
         return {
           'height': '100%',
           'margin-top': null,
-          'position': null,
           'width': '100%'
         };
       }
@@ -675,12 +678,10 @@ export default class Graph {
       return transform === 'none' ? {
         height,
         'margin-top': null,
-        // 'position': 'absolute',
         width
       } : {
         'height': width,
         'margin-top': height,
-        'position': 'absolute',
         'width': height
       };
     });
@@ -750,22 +751,5 @@ export default class Graph {
     });
 
     this._render();
-  }
-
-  _move(maximize) {
-    if (maximize === true) {
-      this._parent = this._root.node().parentNode;
-      this._sibling = this._root.node().nextSibling;
-      document.body.appendChild(this._root.node());
-    } else {
-      if (this._sibling) {
-        this._parent.insertBefore(this._root.node(), this._sibling);
-      } else {
-        this._parent.appendChild(this._root.node());
-      }
-
-      this._parent = null;
-      this._sibling = null;
-    }
   }
 }
