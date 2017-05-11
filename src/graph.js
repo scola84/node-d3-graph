@@ -71,9 +71,6 @@ export default class Graph {
       .attrs({
         'width': '100%',
         'height': '100%'
-      })
-      .styles({
-        'display': 'block'
       });
 
     this._group = this._svg
@@ -644,6 +641,9 @@ export default class Graph {
   }
 
   _setPosition(left, top) {
+    this._svg
+      .style('display', 'block');
+
     this._group
       .attr('transform', `translate(${left},${top})`);
   }
@@ -675,7 +675,7 @@ export default class Graph {
       return transform === 'none' ? {
         height,
         'margin-top': null,
-        'position': 'absolute',
+        // 'position': 'absolute',
         width
       } : {
         'height': width,
