@@ -62,7 +62,7 @@ export default class Graph {
       .append('div')
       .classed('scola svg', true)
       .styles({
-        'flex': 'auto',
+        'flex': '1 1 0%',
         'position': 'relative'
       });
 
