@@ -730,12 +730,11 @@ export default class Graph {
   }
 
   _equalize(changed = true) {
-    const width = this.width();
-
-    if (Number.isNaN(width) === true) {
+    if (this.renderable() === false) {
       return;
     }
 
+    const width = this.width();
     const oldHeight = this.height();
     const newHeight = width * this._ratio;
 
